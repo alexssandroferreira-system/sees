@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>🚗 SEES - Sistema de Estacionamento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .operacional {
+            background: #eef6ff;
+            border: 2px solid #007bff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .verde {
+            color: green;
+            font-weight: bold;
+        }
+
+        .vermelho {
+            color: red;
+            font-weight: bold;
+        }
+
+        .modal-sees {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+        }
+
+        .modal-sees-content {
+            background: #fff;
+            padding: 20px;
+            margin: 5% auto;
+            width: 90%;
+            max-height: 85%;
+            overflow: auto;
+            border-radius: 10px;
+        }
+
+        .chart-container {
+            width: 220px;
+            text-align: justify;
+        }
+
+        canvas {
+            max-width: 200px !important;
+            max-height: 200px !important;
+        }
+
+        .img-logo {
+            width: 360px;
+            height: 360px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .badge-patio {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+
+<body class="container-fluid">
+
+    <div class="row align-items-center mb-4">
+        <div class="col-lg-5">
+            <h2 class="text-primary"><strong>🚗 SEES</strong> - <b class="text-dark"> Sistema de Estacionamento
+                    Escolar</b></h2>
+            <h6 class="text-muted">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
+            <hr>
+            <div id="dataHora" class="fw-bold fs-3 mb-3 text-secondary text-lg-start"></div>
+
+            <div class="card card-body shadow-sm">
+
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <h5>⚙️ Vagas Totais</h5>
+                    </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Carros</label>
+                            <input id="vCarro" type="number" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Motos</label>
+                            <input id="vMoto" type="number" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" onclick="salvarVagas()">💾 Salvar/Editar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 d-flex justify-content-around align-items-center mt-3 mt-lg-0 flex-wrap gap-3">
+                <div class="chart-container">
+                    <h6 class="fw-bold">CARROS</h6>
+                    <canvas id="graficoCarros"></canvas>
+                    <div id="statusCarros" class="small mt-1"></div>
+                </div>
+                <div class="chart-container">
+                    <h6 class="fw-bold">MOTOS</h6>
+                    <canvas id="graficoMotos"></canvas>
+                    <div id="statusMotos" class="small mt-1"></div>
+                </div>
+                <div class="chart-container">
+                    <img src="sistema_estacionamento_escolar_seguro.png" class="img-logo" alt="Logo"
+                        onerror="this.src='https://via.placeholder.com/180?text=SEES'">
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="myTab">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab"
+                    data-bs-target="#entrada">Entrada/Saída</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab"
+                    data-bs-target="#tab-cadastro">Cadastro</button></li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            <div class="tab-pane fade show active" id="entrada">
+                <div class="operacional shadow-sm">
+                    <h5>Controle de Acesso ao Estacionamento</h5>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <input id="buscaEntrada" class="form-control" placeholder="🔍 Buscar por Nome/Placa..."
+                                oninput="filtrarMotoristasEntrada()">
+                        </div>
+                        <div class="col-md-4">
+                            <select id="selectMotorista" class="form-select"
+                                onchange="preencherCamposEntrada()"></select>
+                        </div>
+
+                    </div>
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Placa</label>
+                            <input id="ePlaca" disabled class="form-control bg-light">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="small fw-bold">Tipo</label>
+                            <input id="eTipo" disabled class="form-control bg-light">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Marca</label>
+                            <input id="eMarca" disabled class="form-control bg-light">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Modelo</label>
+                            <input id="eModelo" disabled class="form-control bg-light">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Cor</label>
+                            <input id="eCor" disabled class="form-control bg-light">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Ano</label>
+                            <input id="eAno" disabled class="form-control bg-light">
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4 d-flex gap-3">
+                            <button class="btn btn-success flex-grow-1 py-2 fw-bold" onclick="registrarEntrada()">✅
+                                REGISTRAR ENTRADA</button>
+                            <button class="btn btn-danger flex-grow-1 py-2 fw-bold" onclick="registrarSaida()">🛑
+                                REGISTRAR
+                                SAÍDA</button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-3">
+                    <h4>Pátio e Movimentação Recente</h4>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-success btn-sm"
+                            onclick="exportarExcel('registros', 'Movimentacao')">Exportar Excel</button>
+
+                        <button class="btn btn-outline-primary btn-sm"
+                            onclick="exportarJSON('registros', 'Backup_Mov')">Exportar JSON</button>
+
+                        <button class="btn btn-outline-danger btn-sm"
+                            onclick="document.getElementById('fileMov').click()">Importar JSON</button>
+
+                        <input type="file" id="fileMov" class="d-none" accept=".json"
+                            onchange="importarMovimentacao(this)">
+
+                        <button class="btn btn-primary btn-sm text-white" onclick="abrirHistorico()">📂 Histórico
+                            Movimentação</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Motorista</th>
+                                <th>Tipo</th>
+                                <th>Placa</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Cor</th>
+                                <th>Ano</th>
+                                <th>Entrada</th>
+                                <th>Saída</th>
+                                <th>Permanência</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaRegistros"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-cadastro">
+                <div class="card card-body mb-3 shadow-sm border-primary">
+                    <h4 id="tituloCadastro">Registrar Novo Veículo</h4>
+                    <input type="hidden" id="editIndex" value="-1">
+                    <div class="row g-2">
+                        <div class="col-md-3"><input id="cNome" class="form-control" placeholder="Nome Completo"></div>
+                        <div class="col-md-2"><select id="cTipo" class="form-select">
+                                <option>Carro</option>
+                                <option>Moto</option>
+                            </select></div>
+                        <div class="col-md-2"><input id="cPlaca" class="form-control" placeholder="Placa"></div>
+                        <div class="col-md-2"><input id="cMarca" class="form-control" placeholder="Marca"></div>
+                        <div class="col-md-2"><input id="cModelo" class="form-control" placeholder="Modelo"></div>
+                        <div class="col-md-1"><input id="cCor" class="form-control" placeholder="Cor"></div>
+                        <div class="col-md-1"><input id="cAno" class="form-control" placeholder="Ano"></div>
+
+                        <div class="col-12 mt-2 d-flex gap-2">
+                            <button id="btnSalvar" class="btn btn-primary px-4" onclick="salvarCadastro()">💾
+                                Salvar</button>
+                            <button id="btnCancelar" class="btn btn-secondary px-4 d-none"
+                                onclick="limparFormularioCadastro()">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-3">
+                    <h4>Pátio e Movimentação Recente</h4>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-success btn-sm"
+                            onclick="exportarExcel('cadastroVeiculos', 'Motoristas')">Exportar Excel</button>
+
+                        <button class="btn btn-outline-primary btn-sm"
+                            onclick="exportarJSON('cadastroVeiculos', 'Backup_Cadastros')">Exportar JSON</button>
+
+                        <button class="btn btn-outline-danger btn-sm"
+                            onclick="document.getElementById('fileCad').click()">Importar JSON</button>
+
+                        <input type="file" id="fileCad" class="d-none" accept=".json"
+                            onchange="importarCadastros(this)">
+
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Motorista</th>
+                                <th>Tipo</th>
+                                <th>Placa</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Cor</th>
+                                <th>Ano</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaCadastro"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalHistorico" class="modal-sees">
+            <div class="modal-sees-content shadow-lg">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3>📜 Histórico Completo</h3>
+                    <button class="btn btn-close" onclick="fecharHistorico()"></button>
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">🔍 Filtrar</span>
+                    <input type="text" id="filtroHistorico" class="form-control" placeholder="Nome ou placa..."
+                        oninput="renderizarHistorico()">
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-bordered">
+                        <thead class="table-info">
+                            <tr>
+                                <th>Data</th>
+                                <th>Motorista</th>
+                                <th>Tipo</th>
+                                <th>Placa</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Cor</th>
+                                <th>Ano</th>
+                                <th>Entrada</th>
+                                <th>Saída</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoHistorico"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+       <script>
+    // --- CONFIGURAÇÃO GOOGLE SHEETS ---
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzh8Yc1fdCb-VgdQfFZtv8V217Yzxj8JCZNEGaHGXHGQojndifaCPYTGJ5qtofE-RE7Cg/exec";
+
+    function enviarParaGoogle(key) {
+        const dados = JSON.parse(localStorage.getItem(key) || '[]');
+        
+        // Envia via POST para o App Script
+        fetch(GOOGLE_API_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Importante para evitar erros de CORS do Google
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sheetName: key, // 'registros' ou 'cadastroVeiculos'
+                data: dados
+            })
+        }).then(() => {
+            console.log(`Dados de ${key} sincronizados com a nuvem.`);
+        }).catch(err => console.error("Erro ao sincronizar:", err));
+    }
+
+    let chartCarros = null;
+    let chartMotos = null;
+
+    setInterval(() => document.getElementById('dataHora').innerText = new Date().toLocaleString('pt-BR'), 1000);
+
+    window.onload = () => {
+        const config = JSON.parse(localStorage.getItem('configVagas') || '{"carro":0, "moto":0}');
+        document.getElementById('vCarro').value = config.carro;
+        document.getElementById('vMoto').value = config.moto;
+        atualizarTudo();
+    };
+
+    function atualizarTudo() {
+        atualizarTabelaCadastro();
+        atualizarTabelaRegistros();
+        atualizarGraficos();
+    }
+
+    function salvarVagas() {
+        const v = { carro: parseInt(document.getElementById('vCarro').value) || 0, moto: parseInt(document.getElementById('vMoto').value) || 0 };
+        localStorage.setItem('configVagas', JSON.stringify(v));
+        atualizarGraficos();
+        alert("Vagas atualizadas!");
+    }
+
+    function atualizarGraficos() {
+        const config = JSON.parse(localStorage.getItem('configVagas') || '{"carro":0, "moto":0}');
+        const registros = JSON.parse(localStorage.getItem('registros') || '[]');
+        const ocupCarros = registros.filter(r => !r.saida && (r.tipo || '').toLowerCase().includes('carro')).length;
+        const ocupMotos = registros.filter(r => !r.saida && (r.tipo || '').toLowerCase().includes('moto')).length;
+        const livreCarros = Math.max(0, config.carro - ocupCarros);
+        const livreMotos = Math.max(0, config.moto - ocupMotos);
+
+        document.getElementById('statusCarros').innerHTML = `<span class="verde">Livres: ${livreCarros}</span> | <span class="vermelho">Ocup: ${ocupCarros}</span>`;
+        document.getElementById('statusMotos').innerHTML = `<span class="verde">Livres: ${livreMotos}</span> | <span class="vermelho">Ocup: ${ocupMotos}</span>`;
+
+        chartCarros = renderDonut('graficoCarros', chartCarros, livreCarros, ocupCarros, '#007bff');
+        chartMotos = renderDonut('graficoMotos', chartMotos, livreMotos, ocupMotos, '#ffc107');
+    }
+
+    function renderDonut(id, chart, livre, ocup, cor) {
+        const ctx = document.getElementById(id).getContext('2d');
+        if (chart) chart.destroy();
+        return new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: ['Livre', 'Ocupado'], datasets: [{ data: [livre, ocup], backgroundColor: ['#28a745', cor] }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, cutout: '70%' }
+        });
+    }
+
+    function registrarEntrada() {
+        const s = document.getElementById('selectMotorista').value;
+        if (!s) return alert("Selecione um motorista!");
+        let r = JSON.parse(localStorage.getItem('registros') || '[]');
+        const v = JSON.parse(s);
+        if (r.find(x => x.placa === v.placa && !x.saida)) return alert("Já está no pátio!");
+        r.unshift({ ...v, entrada: new Date().toISOString(), saida: null });
+        localStorage.setItem('registros', JSON.stringify(r));
+        
+        atualizarTudo();
+        enviarParaGoogle('registros'); // SINCRONIZA
+    }
+
+    function registrarSaida() {
+        const s = document.getElementById('selectMotorista').value;
+        if (!s) return alert("Selecione o motorista!");
+        const v = JSON.parse(s);
+        let r = JSON.parse(localStorage.getItem('registros') || '[]');
+        let item = r.find(x => x.placa === v.placa && !x.saida);
+        if (!item) return alert("Não está no pátio!");
+        item.saida = new Date().toISOString();
+        localStorage.setItem('registros', JSON.stringify(r));
+        
+        atualizarTudo();
+        enviarParaGoogle('registros'); // SINCRONIZA
+    }
+
+    function atualizarTabelaRegistros() {
+        const r = JSON.parse(localStorage.getItem('registros') || '[]');
+        const hoje = new Date().toLocaleDateString();
+        const registrosFiltrados = r.filter(x => {
+            const dataEntrada = new Date(x.entrada).toLocaleDateString();
+            return !x.saida || dataEntrada === hoje;
+        });
+
+        document.getElementById('tabelaRegistros').innerHTML = registrosFiltrados.map((x, i) => `
+            <tr>
+                <td>${x.motorista}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
+                <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
+                <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
+                <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
+                <td>${x.saida ? Math.round((new Date(x.saida) - new Date(x.entrada)) / 60000) + ' min' : '-'}</td>
+                <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
+            </tr>`).join('');
+    }
+
+    function salvarCadastro() {
+        const index = parseInt(document.getElementById('editIndex').value);
+        const d = {
+            motorista: document.getElementById('cNome').value.trim(),
+            tipo: document.getElementById('cTipo').value,
+            placa: document.getElementById('cPlaca').value.trim().toUpperCase(),
+            marca: document.getElementById('cMarca').value.trim(),
+            modelo: document.getElementById('cModelo').value.trim(),
+            cor: document.getElementById('cCor').value.trim(),
+            ano: document.getElementById('cAno').value.trim()
+        };
+        if (!d.motorista || !d.placa) return alert("Preencha Nome e Placa!");
+        let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+        if (index === -1) l.push(d); else l[index] = d;
+        localStorage.setItem('cadastroVeiculos', JSON.stringify(l));
+        
+        limparFormularioCadastro();
+        atualizarTudo();
+        enviarParaGoogle('cadastroVeiculos'); // SINCRONIZA
+    }
+
+    function editarCadastro(i) {
+        let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+        const v = l[i];
+        document.getElementById('cNome').value = v.motorista;
+        document.getElementById('cTipo').value = v.tipo;
+        document.getElementById('cPlaca').value = v.placa;
+        document.getElementById('cMarca').value = v.marca;
+        document.getElementById('cModelo').value = v.modelo;
+        document.getElementById('cCor').value = v.cor;
+        document.getElementById('cAno').value = v.ano;
+        document.getElementById('editIndex').value = i;
+        document.getElementById('tituloCadastro').innerText = "📝 Editando";
+        document.getElementById('btnSalvar').innerText = "🔄 Atualizar";
+        document.getElementById('btnCancelar').classList.remove('d-none');
+    }
+
+    function limparFormularioCadastro() {
+        document.getElementById('cNome').value = ""; document.getElementById('cPlaca').value = "";
+        document.getElementById('cMarca').value = ""; document.getElementById('cModelo').value = "";
+        document.getElementById('cCor').value = ""; document.getElementById('cAno').value = "";
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('tituloCadastro').innerText = "Registrar Novo Veículo";
+        document.getElementById('btnSalvar').innerText = "💾 Salvar";
+        document.getElementById('btnCancelar').classList.add('d-none');
+    }
+
+    function atualizarTabelaCadastro() {
+        let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+        document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
+            <tr>
+                <td>${v.motorista}</td><td>${v.tipo}</td><td><b>${v.placa}</b></td>
+                <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
+                </td>
+            </tr>`).join('');
+    }
+
+    function abrirHistorico() { document.getElementById('modalHistorico').style.display = 'block'; renderizarHistorico(); }
+    function fecharHistorico() { document.getElementById('modalHistorico').style.display = 'none'; }
+    
+    function renderizarHistorico() {
+        const r = JSON.parse(localStorage.getItem('registros') || '[]');
+        const f = document.getElementById('filtroHistorico').value.toLowerCase();
+        const hoje = new Date().toLocaleDateString();
+        const historicoFiltrado = r.filter(x => {
+            const dataEntrada = new Date(x.entrada).toLocaleDateString();
+            const condicaoData = !x.saida || dataEntrada === hoje;
+            const condicaoBusca = x.motorista.toLowerCase().includes(f) || x.placa.toLowerCase().includes(f);
+            return condicaoData && condicaoBusca;
+        });
+
+        document.getElementById('corpoHistorico').innerHTML = historicoFiltrado.map(x => `
+            <tr>
+                <td>${new Date(x.entrada).toLocaleDateString()}</td>
+                <td>${x.motorista}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
+                <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
+                <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
+                <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
+            </tr>`).join('');
+    }
+
+    function filtrarMotoristasEntrada() {
+        const t = document.getElementById('buscaEntrada').value.toLowerCase();
+        const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+        const s = document.getElementById('selectMotorista');
+        s.innerHTML = '<option value="">Selecione...</option>';
+        l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
+            .forEach(v => {
+                let o = document.createElement('option');
+                o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.placa})`;
+                s.appendChild(o);
+            });
+    }
+
+    function preencherCamposEntrada() {
+        const val = document.getElementById('selectMotorista').value;
+        if (!val) return;
+        const v = JSON.parse(val);
+        document.getElementById('ePlaca').value = v.placa;
+        document.getElementById('eTipo').value = v.tipo;
+        document.getElementById('eMarca').value = v.marca;
+        document.getElementById('eModelo').value = v.modelo;
+        document.getElementById('eCor').value = v.cor;
+        document.getElementById('eAno').value = v.ano;
+    }
+
+    function removerItem(key, i) {
+        if (confirm('Excluir? Isso também atualizará a planilha após a próxima ação.')) {
+            let l = JSON.parse(localStorage.getItem(key));
+            l.splice(i, 1);
+            localStorage.setItem(key, JSON.stringify(l));
+            atualizarTudo();
+            enviarParaGoogle(key); // SINCRONIZA A EXCLUSÃO
+        }
+    }
+
+    function importarMovimentacao(input) {
+        if (!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const json = JSON.parse(e.target.result);
+                localStorage.setItem('registros', JSON.stringify(json));
+                atualizarTudo();
+                enviarParaGoogle('registros');
+                alert("✅ Importado e sincronizado!");
+            } catch (err) { alert("❌ Erro no arquivo."); }
+            input.value = "";
+        };
+        reader.readAsText(input.files[0]);
+    }
+
+    function importarCadastros(input) {
+        if (!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const json = JSON.parse(e.target.result);
+                localStorage.setItem('cadastroVeiculos', JSON.stringify(json));
+                atualizarTudo();
+                enviarParaGoogle('cadastroVeiculos');
+                alert("✅ Importado e sincronizado!");
+            } catch (err) { alert("❌ Erro no arquivo."); }
+            input.value = "";
+        };
+        reader.readAsText(input.files[0]);
+    }
+
+    function exportarJSON(key, f) {
+        const data = localStorage.getItem(key) || '[]';
+        const blob = new Blob([data], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${f}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+        a.click();
+    }
+
+    function exportarExcel(key, f) {
+        const data = JSON.parse(localStorage.getItem(key) || '[]');
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Dados");
+        XLSX.writeFile(wb, `${f}.xlsx`);
+    }
+</script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
