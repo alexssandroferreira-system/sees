@@ -1,6 +1,6 @@
 
     // --- CONFIGURAÇÃO GOOGLE SHEETS ---
-    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbz842k8h_C85mlvBec1eLCDcPJRwFdPaUAn5G65RVF8MUxwvo_R-Fy4L8EGY5KMZU7JJg/exec";
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyZqgXataqKKSROFBqlPn0b-Zqyz8Y60K9zNuIjl3zO_Zb8r1Uyupz5kajUVbNJ6iW3Yg/exec";
     function enviarParaGoogle(key) {
         const dados = JSON.parse(localStorage.getItem(key) || '[]');
         
