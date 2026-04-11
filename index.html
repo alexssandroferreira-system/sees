@@ -81,55 +81,53 @@
 </head>
 
 <body class="container-fluid">
-
-    <div class="row ol-lg-12 align-items-center mb-1">
-        <div class="col-lg-4">
-            <h2 class="text-primary"><strong>🚗 SEES</strong> - <b class="text-dark"> Sistema de Estacionamento
-                    Escolar</b></h2>
-            <h6 class="text-muted">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
-            <hr>
-            <div id="dataHora" class="fw-bold fs-3 mb-3 text-dark text-lg-start"></div>
-
-            <div class="card card-body shadow-sm">
-
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-3">
-                        <h5>⚙️ Vagas Totais</h5>
-                    </div>
-                        <div class="col-md-2">
-                            <label class="small fw-bold">Carros</label>
-                            <input id="vCarro" type="number" class="form-control">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="small fw-bold">Motos</label>
-                            <input id="vMoto" type="number" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-primary w-100" onclick="salvarVagas()">💾 Salvar/Editar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 d-flex justify-content-around align-items-center mt-3 mt-lg-0 flex-wrap gap-3">
-                <div class="chart-container">
-                    <h6 class="fw-bold">CARROS</h6>
-                    <canvas id="graficoCarros"></canvas>
-                    <div id="statusCarros" class="small mt-1"></div>
-                </div>
-                <div class="chart-container">
-                    <h6 class="fw-bold">MOTOS</h6>
-                    <canvas id="graficoMotos"></canvas>
-                    <div id="statusMotos" class="small mt-1"></div>
-                </div>
-                <div class="chart-container">
-                    <img src="sistema_estacionamento_escolar_seguro.png" class="img-logo" alt="Logo"
-                        onerror="this.src='https://via.placeholder.com/180?text=SEES'">
-                </div>
-            </div>
-        <p>Dica: Como você está usando o GitHub Pages, se não aparecer os dados, dê um <strong>"Ctrl + F5"</strong> no site para limpar o cache e forçar a leitura dos dados da <strong>planilha do Goodle Drive</strong>.</p>
-
+<div class="row align-items-center mb-3 flex-nowrap">
+    <div class="col-lg-5 d-flex align-items-center gap-3">
+        <img src="sistema_estacionamento_escolar_seguro.png" style="width: 100px; height: auto;" alt="Logo"
+             onerror="this.src='https://via.placeholder.com/100?text=SEES'">
+        
+        <div>
+            <h2 class="text-primary mb-0"><strong>🚗 SEES</strong> - <b class="text-dark">Sistema de Estacionamento Escolar</b></h2>
+            <h6 class="text-muted mb-0">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
+            <div id="dataHora" class="fw-bold fs-5 text-dark"></div>
         </div>
+    </div>
+
+    <div class="col-lg-7 d-flex justify-content-end align-items-center gap-4">
+        <div class="card card-body shadow-sm p-2" style="max-width: 350px;">
+            <div class="row g-2 align-items-center">
+                <div class="col-4">
+                    <h6 class="mb-0 small fw-bold">⚙️ Vagas</h6>
+                </div>
+                <div class="col-3">
+                    <input id="vCarro" type="number" class="form-control form-control-sm" placeholder="Carro">
+                </div>
+                <div class="col-3">
+                    <input id="vMoto" type="number" class="form-control form-control-sm" placeholder="Moto">
+                </div>
+                <div class="col-2">
+                    <button class="btn btn-primary btn-sm" onclick="salvarVagas()">💾</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 text-center">
+            <div class="chart-container" style="width: 120px;">
+                <h6 class="fw-bold small mb-1">CARROS</h6>
+                <canvas id="graficoCarros"></canvas>
+                <div id="statusCarros" style="font-size: 10px;"></div>
+            </div>
+            <div class="chart-container" style="width: 120px;">
+                <h6 class="fw-bold small mb-1">MOTOS</h6>
+                <canvas id="graficoMotos"></canvas>
+                <div id="statusMotos" style="font-size: 10px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="small text-muted">Dica: Se os dados não aparecerem, pressione <strong>"Ctrl + F5"</strong> para atualizar o cache do navegador.</p>
+<hr>
 
         <ul class="nav nav-tabs" id="myTab">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab"
