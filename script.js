@@ -282,3 +282,34 @@
         XLSX.writeFile(wb, `${f}.xlsx`);
     }
 
+
+
+async function carregarDadosDaNuvem() {
+    console.log("Buscando dados na nuvem...");
+    try {
+        const response = await fetch(GOOGLE_API_URL); // O navegador faz um GET por padrão
+        const nuvem = await response.json();
+
+        if (nuvem.cadastroVeiculos) {
+            localStorage.setItem('cadastroVeiculos', JSON.stringify(nuvem.cadastroVeiculos));
+        }
+        if (nuvem.registros) {
+            localStorage.setItem('registros', JSON.stringify(nuvem.registros));
+        }
+        
+        atualizarTudo();
+        console.log("Sincronização concluída!");
+    } catch (err) {
+        console.error("Erro ao baixar dados:", err);
+    }
+}
+
+// Altere o seu window.onload para incluir a busca
+window.onload = () => {
+    const config = JSON.parse(localStorage.getItem('configVagas') || '{"carro":0, "moto":0}');
+    document.getElementById('vCarro').value = config.carro;
+    document.getElementById('vMoto').value = config.moto;
+    
+    atualizarTudo();
+    carregarDadosDaNuvem(); // Isso fará a mágica de puxar os dados do outro PC!
+};
