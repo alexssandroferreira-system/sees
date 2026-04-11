@@ -202,11 +202,11 @@
         const t = document.getElementById('buscaEntrada').value.toLowerCase();
         const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
         const s = document.getElementById('selectMotorista');
-        s.innerHTML = '<option value="">Selecione...</option>';
+        s.innerHTML = '<option value="">Selecione o Motorista...</option>';
         l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
             .forEach(v => {
                 let o = document.createElement('option');
-                o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.placa})`;
+                o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.placa}) (${v.marca}) (${v.modelo}) (${v.cor})`; /*aqui mostra os dados ao "selecionar dados do motorista para ENTRADA/SAÍDA"*/
                 s.appendChild(o);
             });
     }
