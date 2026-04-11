@@ -265,6 +265,31 @@
         reader.readAsText(input.files[0]);
     }
 
+
+function filtrarTabelaCadastro() {
+    const termo = document.getElementById('buscaCadastro').value.toLowerCase();
+    const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    const corpoTabela = document.getElementById('tabelaCadastro');
+    
+    // Filtra e renderiza apenas o que coincide com a busca
+    corpoTabela.innerHTML = cadastros.map((v, i) => {
+        const corresponde = v.motorista.toLowerCase().includes(termo) || v.placa.toLowerCase().includes(termo);
+        
+        // Se não corresponder, retornamos uma string vazia para este item
+        if (!corresponde) return '';
+
+        return `
+            <tr>
+                <td>${v.motorista}</td><td>${v.tipo}</td><td><b>${v.placa}</b></td>
+                <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️ Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
+                </td>
+            </tr>`;
+    }).join('');
+}
+
     function exportarJSON(key, f) {
         const data = localStorage.getItem(key) || '[]';
         const blob = new Blob([data], { type: 'application/json' });
