@@ -270,7 +270,6 @@
                     <input type="text" id="buscaCadastro" class="form-control" placeholder="Digite nome ou placa para localizar o registro..." oninput="filtrarTabelaCadastro()">
                     </div>
                 </div>
-            </div>
                     <div class="d-flex gap-2 flex-wrap">
                         <button class="btn btn-outline-success btn-sm"
                             onclick="exportarExcel('cadastroVeiculos', 'Motoristas')">Exportar Excel</button>
@@ -283,6 +282,7 @@
 
                         <input type="file" id="fileCad" class="d-none" accept=".json"
                             onchange="importarCadastros(this)">
+                    </div>
 
                     </div>
                 </div>
