@@ -170,10 +170,12 @@
     const totalCarros = l.filter(v => (v.tipo || '').toLowerCase() === 'carro').length;
     const totalMotos = l.filter(v => (v.tipo || '').toLowerCase() === 'moto').length;
     
+    // Dentro da função atualizarTabelaCadastro no script.js
     const elementoContador = document.getElementById('contadorCadastros');
     if (elementoContador) {
-        elementoContador.innerHTML = `Total: ${total} (🚗 ${totalCarros} | 🏍️ ${totalMotos})`;
-    }
+    // Formato simplificado para caber lado a lado
+    elementoContador.innerHTML = `🚗 ${totalCarros} | 🏍️ ${totalMotos}`;
+}
 
     document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
         <tr>
