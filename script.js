@@ -216,7 +216,7 @@ function exibirTotalPorMotorista() {
             };
         }
         // Adiciona a descrição limpa do veículo
-        agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa}) - ${v.cor}`);
+        agrupado[chave].veiculos.push(${v.tipo}: ${v.tipo}: <strong>${v.modelo}</strong> (<strong>${v.placa}</strong>) - <strong>${v.cor}</strong>);
     });
 
     // 2. Transformar em lista e ordenar (quem tem mais veículos aparece primeiro)
