@@ -172,9 +172,8 @@
     
     // Dentro da função atualizarTabelaCadastro no script.js
     const elementoContador = document.getElementById('contadorCadastros');
-    if (elementoContador) {
-    // Formato simplificado para caber lado a lado
-    elementoContador.innerHTML = `🚗 ${totalCarros} | 🏍️ ${totalMotos}`;
+if (elementoContador) {
+    elementoContador.innerHTML = `Total de Veículos Cadastrados por "Tipo": 🚗 ${totalCarros} | 🏍️ ${totalMotos}`;
 }
 
     document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
