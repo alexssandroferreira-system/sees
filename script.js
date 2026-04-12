@@ -183,7 +183,7 @@ function atualizarTabelaCadastro() {
 
     document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
         <tr>
-            <td>${v.motorista}<br><small class="text-muted">${v.vinculo || '-'}</small></td>
+            <td>${v.motorista}</td><td><strong class="text-muted">${v.vinculo}</strong></td>
             <td>${v.tipo}</td><td><b>${v.placa}</b></td>
             <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
             <td>
