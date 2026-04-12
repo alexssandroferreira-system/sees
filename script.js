@@ -220,7 +220,7 @@ cadastros.forEach(v => {
         agrupado[chave] = { vinculo: v.vinculo, veiculos: [] };
     }
     // Adiciona as informações que queremos exibir
-    agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa})`);
+    agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa}) ${v.marca}) ${v.modelo}) ${v.cor})`);
 });
     
     // Ordenar: motorista com mais veículos primeiro
