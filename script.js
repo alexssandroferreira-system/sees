@@ -205,38 +205,44 @@ function exibirTotalPorMotorista() {
     // Limpar tabela antes de preencher
     corpoTabela.innerHTML = "";
 
-    // Agrupar e contar
-  /*  const contagem = {};
+    // 1. Agrupar os veículos por motorista
+    const agrupado = {};
     cadastros.forEach(v => {
-        const chave = `${v.motorista.toUpperCase()} <br><small class="text-muted">${v.vinculo || 'Não informado'}</small>`;
-        contagem[chave] = (contagem[chave] || 0) + 1;
+        const chave = v.motorista.toUpperCase();
+        if (!agrupado[chave]) {
+            agrupado[chave] = { 
+                vinculo: v.vinculo || 'Não informado', 
+                veiculos: [] 
+            };
+        }
+        // Adiciona a descrição limpa do veículo
+        agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa}) - ${v.cor}`);
     });
-*/
-    /*abre um modal com o total de veiculos por motorista e lista quais são*/
-const agrupado = {};
-cadastros.forEach(v => {
-    const chave = v.motorista.toUpperCase();
-    if (!agrupado[chave]) {
-        agrupado[chave] = { vinculo: v.vinculo, veiculos: [] };
-    }
-    // Adiciona as informações que queremos exibir
-    agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa}) ${v.marca}) ${v.modelo}) ${v.cor})`);
-});
-    
-    // Ordenar: motorista com mais veículos primeiro
-    const listaOrdenada = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
 
-    // Inserir linhas na tabela do Modal
-    listaOrdenada.forEach(([info, qtd]) => {
+    // 2. Transformar em lista e ordenar (quem tem mais veículos aparece primeiro)
+    const listaOrdenada = Object.entries(agrupado).sort((a, b) => {
+        return b[1].veiculos.length - a[1].veiculos.length;
+    });
+
+    // 3. Inserir as linhas na tabela do Modal
+    listaOrdenada.forEach(([nome, dados]) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${info}</td>
-            <td class="text-center fw-bold">${qtd}</td>
+            <td>
+                <strong>${nome}</strong><br>
+                <small class="text-muted">${dados.vinculo}</small>
+            </td>
+            <td>
+                ${dados.veiculos.join('<br>')}
+            </td>
+            <td class="text-center fw-bold">
+                ${dados.veiculos.length}
+            </td>
         `;
         corpoTabela.appendChild(tr);
     });
 
-    // Mostrar o Modal
+    // 4. Mostrar o Modal
     document.getElementById('modalTotalMotorista').style.display = 'block';
 }
 
