@@ -206,12 +206,23 @@ function exibirTotalPorMotorista() {
     corpoTabela.innerHTML = "";
 
     // Agrupar e contar
-    const contagem = {};
+  /*  const contagem = {};
     cadastros.forEach(v => {
         const chave = `${v.motorista.toUpperCase()} <br><small class="text-muted">${v.vinculo || 'Não informado'}</small>`;
         contagem[chave] = (contagem[chave] || 0) + 1;
     });
-
+*/
+    /*abre um modal com o total de veiculos por motorista e lista quais são*/
+const agrupado = {};
+cadastros.forEach(v => {
+    const chave = v.motorista.toUpperCase();
+    if (!agrupado[chave]) {
+        agrupado[chave] = { vinculo: v.vinculo, veiculos: [] };
+    }
+    // Adiciona as informações que queremos exibir
+    agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa})`);
+});
+    
     // Ordenar: motorista com mais veículos primeiro
     const listaOrdenada = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
 
