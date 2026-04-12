@@ -273,14 +273,14 @@
 <div class="row mb-3 align-items-center">
     <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
         
-        <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 850px;">
-            <div class="input-group" style="width: 300px;">
+        <div class="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
+            <div class="input-group" style="min-width: 250px; max-width: 300px;">
                 <span class="input-group-text bg-warning text-dark fw-bold">🔍 Buscar</span>
                 <input type="text" id="buscaCadastro" class="form-control" placeholder="Nome ou placa..." oninput="filtrarTabelaCadastro()">
             </div>
             
-            <div id="contadorCadastros" class="badge bg-dark p-2 fs-6 shadow-sm whitespace-nowrap">
-                🚗 0 | 🏍️ 0
+            <div id="contadorCadastros" class="badge bg-dark p-2 fs-6 shadow-sm text-wrap text-start" style="min-width: fit-content;">
+                Total de Veículos Cadastrados por "Tipo": 🚗 0 | 🏍️ 0
             </div>
 
             <button class="btn btn-sm btn-info fw-bold text-nowrap" onclick="exibirTotalPorMotorista()">
@@ -288,10 +288,10 @@
             </button>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <button class="btn btn-outline-success btn-sm text-nowrap" onclick="exportarExcel('cadastroVeiculos', 'Motoristas')">Excel</button>
-            <button class="btn btn-outline-primary btn-sm text-nowrap" onclick="exportarJSON('cadastroVeiculos', 'Backup_Cadastros')">Exportar JSON</button>
-            <button class="btn btn-outline-danger btn-sm text-nowrap" onclick="document.getElementById('fileCad').click()">Importar JSON</button>
+            <button class="btn btn-outline-primary btn-sm text-nowrap" onclick="exportarJSON('cadastroVeiculos', 'Exportar JSON')">JSON</button>
+            <button class="btn btn-outline-danger btn-sm text-nowrap" onclick="document.getElementById('fileCad').click()">Importar</button>
             <input type="file" id="fileCad" class="d-none" accept=".json" onchange="importarCadastros(this)">
         </div>
 
