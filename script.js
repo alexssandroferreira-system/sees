@@ -193,20 +193,56 @@ function atualizarTabelaCadastro() {
         </tr>`).join('');
 }
 
+// Função para abrir o Modal de Total por Motorista
 function exibirTotalPorMotorista() {
     const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
-    if (cadastros.length === 0) return alert("Nenhum veículo cadastrado.");
+    const corpoTabela = document.getElementById('corpoTotalMotorista');
+    
+    if (cadastros.length === 0) {
+        return alert("Nenhum veículo cadastrado.");
+    }
+
+    // Limpar tabela antes de preencher
+    corpoTabela.innerHTML = "";
+
+    // Agrupar e contar
     const contagem = {};
     cadastros.forEach(v => {
-        const chave = `${v.motorista.toUpperCase()} (${v.vinculo || 'Não informado'})`;
+        const chave = `${v.motorista.toUpperCase()} <br><small class="text-muted">${v.vinculo || 'Não informado'}</small>`;
         contagem[chave] = (contagem[chave] || 0) + 1;
     });
-    let relatorio = "📊 VEÍCULOS POR MOTORISTA E VÍNCULO:\n\n";
-    Object.entries(contagem).sort((a, b) => b[1] - a[1]).forEach(([info, qtd]) => {
-        relatorio += `${info}: ${qtd} veículo(s)\n`;
+
+    // Ordenar: motorista com mais veículos primeiro
+    const listaOrdenada = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+
+    // Inserir linhas na tabela do Modal
+    listaOrdenada.forEach(([info, qtd]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${info}</td>
+            <td class="text-center fw-bold">${qtd}</td>
+        `;
+        corpoTabela.appendChild(tr);
     });
-    alert(relatorio);
+
+    // Mostrar o Modal
+    document.getElementById('modalTotalMotorista').style.display = 'block';
 }
+
+// Função para fechar o Modal
+function fecharModalMotorista() {
+    document.getElementById('modalTotalMotorista').style.display = 'none';
+}
+
+// Opcional: Fechar o modal se o usuário clicar fora da caixa branca
+window.onclick = function(event) {
+    const modalHist = document.getElementById('modalHistorico');
+    const modalMot = document.getElementById('modalTotalMotorista');
+    if (event.target == modalHist) modalHist.style.display = "none";
+    if (event.target == modalMot) modalMot.style.display = "none";
+}
+
+
 
 function filtrarTabelaCadastro() {
     const termo = document.getElementById('buscaCadastro').value.toLowerCase();
