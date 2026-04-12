@@ -161,18 +161,31 @@
         document.getElementById('btnCancelar').classList.add('d-none');
     }
 
+
     function atualizarTabelaCadastro() {
-        let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
-        document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
-            <tr>
-                <td>${v.motorista}</td><td>${v.tipo}</td><td><b>${v.placa}</b></td>
-                <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️</button>
-                    <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
-                </td>
-            </tr>`).join('');
+    let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    
+    // Lógica do contador
+    const total = l.length;
+    const totalCarros = l.filter(v => (v.tipo || '').toLowerCase() === 'carro').length;
+    const totalMotos = l.filter(v => (v.tipo || '').toLowerCase() === 'moto').length;
+    
+    const elementoContador = document.getElementById('contadorCadastros');
+    if (elementoContador) {
+        elementoContador.innerHTML = `Total: ${total} (🚗 ${totalCarros} | 🏍️ ${totalMotos})`;
     }
+
+    document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
+        <tr>
+            <td>${v.motorista}</td><td>${v.tipo}</td><td><b>${v.placa}</b></td>
+            <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
+            </td>
+        </tr>`).join('');
+}
+
 
     function abrirHistorico() { document.getElementById('modalHistorico').style.display = 'block'; renderizarHistorico(); }
     function fecharHistorico() { document.getElementById('modalHistorico').style.display = 'none'; }
