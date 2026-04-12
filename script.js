@@ -116,7 +116,7 @@ function atualizarTabelaRegistros() {
 
     document.getElementById('tabelaRegistros').innerHTML = filtrados.map((x, i) => `
         <tr>
-            <td>${x.motorista}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
+            <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
             <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
             <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
             <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
@@ -129,8 +129,8 @@ function salvarCadastro() {
     const index = parseInt(document.getElementById('editIndex').value);
     const d = {
         motorista: document.getElementById('cNome').value.trim(),
-        tipo: document.getElementById('cTipo').value,
         vinculo: document.getElementById('cVinculo').value,
+        tipo: document.getElementById('cTipo').value,
         placa: document.getElementById('cPlaca').value.trim().toUpperCase(),
         marca: document.getElementById('cMarca').value.trim(),
         modelo: document.getElementById('cModelo').value.trim(),
@@ -150,8 +150,8 @@ function editarCadastro(i) {
     let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
     const v = l[i];
     document.getElementById('cNome').value = v.motorista;
-    document.getElementById('cTipo').value = v.tipo;
     document.getElementById('cVinculo').value = v.vinculo || "";
+    document.getElementById('cTipo').value = v.tipo;
     document.getElementById('cPlaca').value = v.placa;
     document.getElementById('cMarca').value = v.marca;
     document.getElementById('cModelo').value = v.modelo;
@@ -164,11 +164,10 @@ function editarCadastro(i) {
 }
 
 function limparFormularioCadastro() {
-    document.getElementById('cNome').value = ""; document.getElementById('cPlaca').value = "";
-    document.getElementById('cMarca').value = ""; document.getElementById('cModelo').value = "";
-    document.getElementById('cCor').value = ""; document.getElementById('cAno').value = "";
-    document.getElementById('cVinculo').value = "";
-    document.getElementById('editIndex').value = "-1";
+    document.getElementById('cNome').value = ""; document.getElementById('cVinculo').value = "";
+    document.getElementById('cPlaca').value = ""; document.getElementById('cMarca').value = ""; 
+    document.getElementById('cModelo').value = ""; document.getElementById('cCor').value = ""; 
+    document.getElementById('cAno').value = ""; document.getElementById('editIndex').value = "-1";
     document.getElementById('tituloCadastro').innerText = "Registrar Novo Veículo";
     document.getElementById('btnSalvar').innerText = "💾 Salvar";
     document.getElementById('btnCancelar').classList.add('d-none');
@@ -236,7 +235,7 @@ function renderizarHistorico() {
     document.getElementById('corpoHistorico').innerHTML = filtrados.map(x => `
         <tr>
             <td>${new Date(x.entrada).toLocaleDateString()}</td>
-            <td>${x.motorista}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
+            <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
             <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
             <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
             <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
@@ -260,6 +259,7 @@ function preencherCamposEntrada() {
     const val = document.getElementById('selectMotorista').value;
     if (!val) return;
     const v = JSON.parse(val);
+    document.getElementById('eVinculo').value = v.vinculo;
     document.getElementById('ePlaca').value = v.placa;
     document.getElementById('eTipo').value = v.tipo;
     document.getElementById('eMarca').value = v.marca;
