@@ -266,21 +266,17 @@
                 </div>
 
                 <!--inicio-->
-            <div class="row mb-3 align-items-center">
+           <div class="row mb-3 align-items-center">
     <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
         
-        <div style="flex: 1; min-width: 300px; max-width: 500px;">
+        <div class="d-flex align-items-center gap-3" style="flex: 1; min-width: 300px; max-width: 650px;">
             <div class="input-group">
                 <span class="input-group-text bg-warning text-dark fw-bold">🔍 Buscar para Editar</span>
                 <input type="text" id="buscaCadastro" class="form-control" placeholder="Digite nome ou placa..." oninput="filtrarTabelaCadastro()">
             </div>
-            
             <div id="contadorCadastros" class="badge bg-dark p-2 fs-6 shadow-sm">
                 Total: 0 (🚗 0 | 🏍️ 0)
             </div>
-            <button class="btn btn-sm btn-info fw-bold ms-2" onclick="exibirTotalPorMotorista()">
-            👤 Total por Motorista
-            </button>
         </div>
 
         <div class="d-flex gap-2">
