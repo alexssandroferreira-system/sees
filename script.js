@@ -188,6 +188,34 @@ if (elementoContador) {
 }
 
 
+function exibirTotalPorMotorista() {
+    const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    
+    if (cadastros.length === 0) {
+        return alert("Nenhum veículo cadastrado.");
+    }
+
+    // Criar um objeto para contar (Ex: { "João": 2, "Maria": 1 })
+    const contagem = {};
+    cadastros.forEach(v => {
+        const nome = v.motorista.trim().toUpperCase();
+        contagem[nome] = (contagem[nome] || 0) + 1;
+    });
+
+    // Transformar em uma lista bonita para exibir
+    let relatorio = "📊 VEÍCULOS POR MOTORISTA:\n\n";
+    
+    // Ordenar do motorista com mais veículos para o com menos
+    const listaOrdenada = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+
+    listaOrdenada.forEach(([nome, qtd]) => {
+        relatorio += `${nome}: ${qtd} veículo(s)\n`;
+    });
+
+    alert(relatorio);
+}
+
+
     function abrirHistorico() { document.getElementById('modalHistorico').style.display = 'block'; renderizarHistorico(); }
     function fecharHistorico() { document.getElementById('modalHistorico').style.display = 'none'; }
     
