@@ -272,7 +272,7 @@ function prepararDadosRelatorio() {
         if (!agrupado[chave]) {
             agrupado[chave] = { vinculo: v.vinculo || 'Não informado', veiculos: [] };
         }
-        agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa}) - ${v.cor}`);
+        agrupado[chave].veiculos.push(`${v.tipo}: ${v.marca}, ${v.modelo} (${v.placa}) - ${v.cor}`);
     });
 
     return Object.entries(agrupado).sort((a, b) => b[1].veiculos.length - a[1].veiculos.length);
