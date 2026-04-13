@@ -315,7 +315,7 @@ function baixarRelatorioMotoristaPDF() {
 
     doc.autoTable({
         startY: 35,
-        head: [['Motorista', 'Veículos', 'Total']],
+        head: [['Nome do Motorista', 'Veículos Cadastrados', 'Total']],
         body: rows,
         theme: 'grid',
         headStyles: { fillColor: [0, 123, 255] }, // Azul do sistema
