@@ -308,15 +308,20 @@ function atualizarTabelaRegistros() {
     const hoje = new Date().toLocaleDateString();
     const filtrados = r.filter(x => !x.saida || new Date(x.entrada).toLocaleDateString() === hoje);
 
-    document.getElementById('tabelaRegistros').innerHTML = filtrados.map((x, i) => `
-        <tr>
-            <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
-            <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
-            <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
-            <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
-            <td>${x.saida ? Math.round((new Date(x.saida) - new Date(x.entrada)) / 60000) + ' min' : '-'}</td>
-            <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
-        </tr>`).join('');
+    document.getElementById('tabelaRegistros').innerHTML = filtrados.map((x, i) => {
+        // Chamamos a função de calcular permanência aqui
+        const permanencia = x.saida ? calcularPermanencia(x.entrada, x.saida) : '-';
+
+        return `
+            <tr>
+                <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
+                <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
+                <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
+                <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
+                <td class="fw-bold">${permanencia}</td>
+                <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
+            </tr>`;
+    }).join('');
 }
 
 function salvarCadastro() {
