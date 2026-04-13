@@ -133,7 +133,8 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center text-center mb-2 flex-wrap gap-3">
-            <h4>Pátio e Movimentação Recente <small class="text-muted fs-6">(Entrada / Saída / Permanência: HH:mm:ss)</small></h4>                <div class="d-flex gap-2 flex-wrap">
+            <h4>Pátio e Movimentação Recente <small class="text-muted fs-6">(Entrada / Saída / Permanência: HH:mm:ss)</small></h4>               
+                <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-outline-success btn-sm" onclick="exportarExcel('registros', 'Movimentacao')">Excel</button>
                     <button class="btn btn-outline-primary btn-sm" onclick="exportarJSON('registros', 'Backup_Mov')">JSON</button>
                     <button class="btn btn-outline-danger btn-sm" onclick="document.getElementById('fileMov').click()">Importar</button>
@@ -227,9 +228,9 @@
         
         <div class="d-flex align-items-center gap-2 flex-grow-1">
             <div class="input-group" style="max-width: 500px;">
-            <span class="input-group-text bg-warning border-warning text-dark"><i class="bi bi-search"> </i> Pesquisar </span>
+            <span class="input-group-text bg-warning border-warning text-dark"><i class="bi bi-search"> Pesquisar </i> </span>
         <input type="text" id="buscaCadastro" class="form-control border-warning-subtle" placeholder="Digite o nome ou a placa..." 
-           style="box-shadow: none; height: 120px;" oninput="filtrarTabelaCadastro()">
+           style="box-shadow: none; width:120px;height: 45px;" oninput="filtrarTabelaCadastro()">
             <button class="btn btn-outline-warning text-dark" type="button" onclick="limparBusca()">Limpar</button>
         </div>   
      
