@@ -3,17 +3,34 @@
 const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbxSgnWz56Ys0oGyZF-JSuZFXn7RIOxQEA4Fer9kZRSavEpaB5G9hOwGrtPMvpAwugzXSA/exec";
 
 function enviarParaGoogle(key) {
-    const dados = JSON.parse(localStorage.getItem(key) || '[]');
+    const dadosOriginais = JSON.parse(localStorage.getItem(key) || '[]');
     const nomeAmigavel = key === 'registros' ? 'Entrada/Saída e Registros' : 'Cadastro de Veículos';
+
+    // --- AJUSTE AQUI ---
+    // Criamos uma nova lista de dados para não modificar o que está salvo no navegador
+    let dadosParaEnviar = dadosOriginais;
+
+    if (key === 'registros') {
+        dadosParaEnviar = dadosOriginais.map(item => {
+            // Se o veículo já saiu, calcula a permanência real. 
+            // Se ainda está no pátio, calcula a permanência até o momento atual (Agora).
+            const dataFim = item.saida ? item.saida : new Date().toISOString();
+            
+            return {
+                ...item, // Mantém todos os campos originais (nome, placa, entrada, etc)
+                permanencia: calcularPermanencia(item.entrada, dataFim) // Acrescenta a nova coluna
+            };
+        });
+    }
 
     fetch(GOOGLE_API_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sheetName: key, data: dados })
+        body: JSON.stringify({ sheetName: key, data: dadosParaEnviar }) // Enviamos os dados ajustados
     })
     .then(() => {
-        console.log(`Dados de ${key} sincronizados.`);
+        console.log(`Dados de ${key} sincronizados com sucesso.`);
         alert(`✅ Sucesso!\nOs dados de "${nomeAmigavel}" foram enviados para a nuvem.`);
     })
     .catch(err => {
@@ -21,6 +38,7 @@ function enviarParaGoogle(key) {
         alert(`❌ Erro de Conexão!\nVerifique sua internet.`);
     });
 }
+
 
 let chartCarros = null;
 let chartMotos = null;
