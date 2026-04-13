@@ -25,12 +25,13 @@ function enviarParaGoogle(key) {
 let chartCarros = null;
 let chartMotos = null;
 
-// Timer de data e hora
+// CONTROLE de data e hora
 setInterval(() => {
     const el = document.getElementById('dataHora');
     if (el) el.innerText = new Date().toLocaleString('pt-BR');
 }, 1000);
 
+/*INICIO CABECAÇHO COM GRÁFICOS TOTAL DE VAGAS PARA CARRO/MOTO*/
 // UNIFICADO: Apenas um window.onload
 window.onload = () => {
     const config = JSON.parse(localStorage.getItem('configVagas') || '{"carro":0, "moto":0}');
@@ -82,6 +83,67 @@ function renderDonut(id, chart, livre, ocup, cor) {
         options: { responsive: true, plugins: { legend: { display: false } }, cutout: '70%' }
     });
 }
+/*INICIO CABECAÇHO COM GRÁFICOS TOTAL DE VAGAS PARA CARRO/MOTO*/
+
+
+/*INICIO ABA DADOS REF. ENTRADA/SAÍDA DE VEÍCULOS POR MOTORISTA*/
+
+//INICIO ABA - ENTRADA/SAÍDA -- Funções auxiliares (Histórico, Exportação, Importação)...
+function abrirHistorico() { document.getElementById('modalHistorico').style.display = 'block'; renderizarHistorico(); }
+function fecharHistorico() { document.getElementById('modalHistorico').style.display = 'none'; }
+
+function renderizarHistorico() {
+    const r = JSON.parse(localStorage.getItem('registros') || '[]');
+    const f = document.getElementById('filtroHistorico').value.toLowerCase();
+    const filtrados = r.filter(x => x.motorista.toLowerCase().includes(f) || x.placa.toLowerCase().includes(f));
+    document.getElementById('corpoHistorico').innerHTML = filtrados.map(x => `
+        <tr>
+            <td>${new Date(x.entrada).toLocaleDateString()}</td>
+            <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
+            <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
+            <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
+            <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
+        </tr>`).join('');
+}
+
+function filtrarMotoristasEntrada() {
+    const t = document.getElementById('buscaEntrada').value.toLowerCase();
+    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    const s = document.getElementById('selectMotorista');
+    s.innerHTML = '<option value="">Selecione o Motorista...</option>';
+    l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
+        .forEach(v => {
+            let o = document.createElement('option');
+            o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.placa}) - ${v.vinculo || ''}`;
+            s.appendChild(o);
+        });
+}
+
+function preencherCamposEntrada() {
+    const val = document.getElementById('selectMotorista').value;
+    if (!val) return;
+    const v = JSON.parse(val);
+    document.getElementById('eVinculo').value = v.vinculo;
+    document.getElementById('ePlaca').value = v.placa;
+    document.getElementById('eTipo').value = v.tipo;
+    document.getElementById('eMarca').value = v.marca;
+    document.getElementById('eModelo').value = v.modelo;
+    document.getElementById('eCor').value = v.cor;
+    document.getElementById('eAno').value = v.ano;
+}
+
+function removerItem(key, i) {
+    if (confirm('Excluir?')) {
+        let l = JSON.parse(localStorage.getItem(key));
+        l.splice(i, 1);
+        localStorage.setItem(key, JSON.stringify(l));
+        atualizarTudo();
+        enviarParaGoogle(key);
+    }
+}
+
+
+//parte da  ABA - ENTRADA/SAÍDA -- Funções auxiliares (Histórico, Exportação, Importação)...
 
 function registrarEntrada() {
     const s = document.getElementById('selectMotorista').value;
@@ -109,6 +171,132 @@ function registrarSaida() {
     enviarParaGoogle('registros');
 }
 
+//ABA - ENTRADA/SAÍDA --  Funções de Importação com verificação de erro aprimorada
+function exportarJSON(key, f) {
+    const data = localStorage.getItem(key) || '[]';
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${f}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+    a.click();
+}
+
+function exportarExcel(key, f) {
+    const data = JSON.parse(localStorage.getItem(key) || '[]');
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Dados");
+    XLSX.writeFile(wb, `${f}.xlsx`);
+}
+
+function importarMovimentacao(input) {
+    if (!input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const json = JSON.parse(e.target.result);
+            if (!Array.isArray(json)) throw new Error("Formato inválido");
+            localStorage.setItem('registros', JSON.stringify(json));
+            atualizarTudo();
+            enviarParaGoogle('registros');
+            alert("✅ Importado e sincronizado!");
+        } catch (err) { alert("❌ Arquivo inválido! Use um JSON gerado pelo sistema."); }
+        input.value = "";
+    };
+    reader.readAsText(input.files[0]);
+}
+
+
+// Função Auxiliar para calcular permanência
+function calcularPermanencia(entrada, saida) {
+    if (!entrada || !saida) return "---";
+    const diff = new Date(saida) - new Date(entrada);
+    const horas = Math.floor(diff / (1000 * 60 * 60));
+    const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${horas}h ${minutos}min`;
+}
+
+// --- EXPORTAR HISTÓRICO PARA EXCEL ---
+function exportarHistoricoExcel() {
+    const dados = JSON.parse(localStorage.getItem('registros') || '[]');
+    if (dados.length === 0) return alert("Não há registros para exportar.");
+
+    const dadosFormatados = dados.map(reg => ({
+        'Motorista': reg.motorista,
+        'Vínculo': reg.vinculo || '---',
+        'Tipo': reg.tipo,
+        'Placa': reg.placa,
+        'Marca/Modelo': `${reg.marca} ${reg.modelo}`,
+        'Cor': reg.cor,
+        'Entrada': reg.entrada ? new Date(reg.entrada).toLocaleString() : '---',
+        'Saída': reg.saida ? new Date(reg.saida).toLocaleString() : 'Ainda no Pátio',
+        'Permanência': calcularPermanencia(reg.entrada, reg.saida)
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dadosFormatados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Movimentação");
+    XLSX.writeFile(wb, `Historico_Movimentacao_SEES.xlsx`);
+}
+
+// INICIO - ABA ENTRADA/SAÍDA--- EXPORTAR HISTÓRICO PARA PDF ---
+function exportarHistoricoPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber todas as colunas
+    const dados = JSON.parse(localStorage.getItem('registros') || '[]');
+
+    doc.setFontSize(16);
+    doc.text("Relatório Geral de Movimentação (Entradas e Saídas)", 14, 15);
+
+    const rows = dados.map(reg => [
+        reg.motorista,
+        reg.vinculo || '---',
+        reg.placa,
+        `${reg.marca} ${reg.modelo}`,
+        reg.entrada ? new Date(reg.entrada).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) : '---',
+        reg.saida ? new Date(reg.saida).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) : 'Pátio',
+        calcularPermanencia(reg.entrada, reg.saida)
+    ]);
+
+    doc.autoTable({
+        startY: 25,
+        head: [['Motorista', 'Vínculo', 'Placa', 'Marca/Modelo', 'Entrada', 'Saída', 'Permanência']],
+        body: rows,
+        theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [40, 40, 40] }
+    });
+
+    doc.save("Relatorio_Movimentacao_SEES.pdf");
+}
+// FIM - ABA ENTRADA/SAÍDA--- EXPORTAR HISTÓRICO PARA PDF ---
+
+// incio - ABA ENTRADA/SAÍDA----- EXPORTAR PÁTIO ATUAL (EXCEL) ---
+function exportarPatioExcel() {
+    const dados = JSON.parse(localStorage.getItem('registros') || '[]');
+    const noPatio = dados.filter(reg => !reg.saida); // Apenas quem não saiu
+
+    const dadosFormatados = noPatio.map(reg => ({
+        'Motorista': reg.motorista,
+        'Vínculo': reg.vinculo || '---',
+        'Tipo': reg.tipo,
+        'Placa': reg.placa,
+        'Veículo': `${reg.marca} ${reg.modelo} (${reg.cor})`,
+        'Hora Entrada': new Date(reg.entrada).toLocaleString()
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dadosFormatados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pátio Atual");
+    XLSX.writeFile(wb, `Veiculos_No_Patio_Agora.xlsx`);
+}
+// FIM - ABA ENTRADA/SAÍDA----- EXPORTAR PÁTIO ATUAL (EXCEL) ---
+
+/*FIM ABA DADOS REF. ENTRADA/SAÍDA DE VEÍCULOS POR MOTORISTA*/
+
+
+
+/*inicio ABA CADASTRO para registro de motorista e veículos*/
 function atualizarTabelaRegistros() {
     const r = JSON.parse(localStorage.getItem('registros') || '[]');
     const hoje = new Date().toLocaleDateString();
@@ -192,7 +380,28 @@ function atualizarTabelaCadastro() {
             </td>
         </tr>`).join('');
 }
+/*inicio ABA CADASTRO para registro de motorista e veículos*/
 
+/*inicio filtro ABA CADASTRO -- BUSCAR MOTORISTA/PLACA*/
+function filtrarTabelaCadastro() {
+    const termo = document.getElementById('buscaCadastro').value.toLowerCase();
+    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    document.getElementById('tabelaCadastro').innerHTML = l.filter(v => v.motorista.toLowerCase().includes(termo) || v.placa.toLowerCase().includes(termo))
+        .map((v, i) => `
+            <tr>
+                <td>${v.motorista}<br><small class="text-muted">${v.vinculo || '-'}</small></td>
+                <td>${v.tipo}</td><td><b>${v.placa}</b></td>
+                <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
+                </td>
+            </tr>`).join('');
+}
+/*fim filtro ABA CADASTRO -- BUSCAR MOTORISTA/PLACA*/
+
+
+/*inicio ABA CADASTRO para RELATORIO dos registros de motorista e veículos*/
 /*inicio relatorio de quantidade de veiculos por motorista*/
 // Função para abrir o Modal de Total por Motorista
 function exibirTotalPorMotorista() {
@@ -278,7 +487,7 @@ function prepararDadosRelatorio() {
     return Object.entries(agrupado).sort((a, b) => b[1].veiculos.length - a[1].veiculos.length);
 }
 
-// --- EXPORTAR EXCEL ---
+//ABA  CADASTRO  ---MODAL  EXPORTAR EXCEL ---
 function baixarRelatorioMotoristaExcel() {
     const lista = prepararDadosRelatorio();
     const dadosExcel = lista.map(([nome, dados]) => ({
@@ -294,13 +503,13 @@ function baixarRelatorioMotoristaExcel() {
     XLSX.writeFile(wb, `Relatorio_Veiculos_por_Motorista.xlsx`);
 }
 
-// --- EXPORTAR PDF ---
+// ABA  CADASTRO  ---MODAL EXPORTAR PDF ---
 function baixarRelatorioMotoristaPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const lista = prepararDadosRelatorio();
 
-    // Título do PDF
+    //MODAL Título do PDF 
     doc.setFontSize(18);
     doc.text("Relatório: Veículos por Motorista", 14, 20);
     doc.setFontSize(10);
@@ -327,103 +536,28 @@ function baixarRelatorioMotoristaPDF() {
 
     doc.save(`Relatorio_Motoristas_SEES.pdf`);
 }
-/*fim EXPORT "PDV/EXCEL"relatorio de quantidade de veiculos por motorista*/
-
-
 /*fim relatorio de quantidade de veiculos por motorista*/
 
-
-function filtrarTabelaCadastro() {
-    const termo = document.getElementById('buscaCadastro').value.toLowerCase();
-    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
-    document.getElementById('tabelaCadastro').innerHTML = l.filter(v => v.motorista.toLowerCase().includes(termo) || v.placa.toLowerCase().includes(termo))
-        .map((v, i) => `
-            <tr>
-                <td>${v.motorista}<br><small class="text-muted">${v.vinculo || '-'}</small></td>
-                <td>${v.tipo}</td><td><b>${v.placa}</b></td>
-                <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️</button>
-                    <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
-                </td>
-            </tr>`).join('');
-}
-
-// Funções auxiliares (Histórico, Exportação, Importação) mantidas do original...
-function abrirHistorico() { document.getElementById('modalHistorico').style.display = 'block'; renderizarHistorico(); }
-function fecharHistorico() { document.getElementById('modalHistorico').style.display = 'none'; }
-
-function renderizarHistorico() {
-    const r = JSON.parse(localStorage.getItem('registros') || '[]');
-    const f = document.getElementById('filtroHistorico').value.toLowerCase();
-    const filtrados = r.filter(x => x.motorista.toLowerCase().includes(f) || x.placa.toLowerCase().includes(f));
-    document.getElementById('corpoHistorico').innerHTML = filtrados.map(x => `
-        <tr>
-            <td>${new Date(x.entrada).toLocaleDateString()}</td>
-            <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
-            <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
-            <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
-            <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
-        </tr>`).join('');
-}
-
-function filtrarMotoristasEntrada() {
-    const t = document.getElementById('buscaEntrada').value.toLowerCase();
-    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
-    const s = document.getElementById('selectMotorista');
-    s.innerHTML = '<option value="">Selecione o Motorista...</option>';
-    l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
-        .forEach(v => {
-            let o = document.createElement('option');
-            o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.placa}) - ${v.vinculo || ''}`;
-            s.appendChild(o);
-        });
-}
-
-function preencherCamposEntrada() {
-    const val = document.getElementById('selectMotorista').value;
-    if (!val) return;
-    const v = JSON.parse(val);
-    document.getElementById('eVinculo').value = v.vinculo;
-    document.getElementById('ePlaca').value = v.placa;
-    document.getElementById('eTipo').value = v.tipo;
-    document.getElementById('eMarca').value = v.marca;
-    document.getElementById('eModelo').value = v.modelo;
-    document.getElementById('eCor').value = v.cor;
-    document.getElementById('eAno').value = v.ano;
-}
-
-function removerItem(key, i) {
-    if (confirm('Excluir?')) {
-        let l = JSON.parse(localStorage.getItem(key));
-        l.splice(i, 1);
-        localStorage.setItem(key, JSON.stringify(l));
-        atualizarTudo();
-        enviarParaGoogle(key);
-    }
-}
-
-function exportarJSON(key, f) {
-    const data = localStorage.getItem(key) || '[]';
-    const blob = new Blob([data], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${f}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-    a.click();
-}
-
-function exportarExcel(key, f) {
-    const data = JSON.parse(localStorage.getItem(key) || '[]');
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Dados");
-    XLSX.writeFile(wb, `${f}.xlsx`);
+// ABA - CADASTRO -- 
+function importarCadastros(input) {
+    if (!input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const json = JSON.parse(e.target.result);
+            if (!Array.isArray(json)) throw new Error("Formato inválido");
+            localStorage.setItem('cadastroVeiculos', JSON.stringify(json));
+            atualizarTudo();
+            enviarParaGoogle('cadastroVeiculos');
+            alert("✅ Importado e sincronizado!");
+        } catch (err) { alert("❌ Arquivo inválido! Use um JSON gerado pelo sistema."); }
+        input.value = "";
+    };
+    reader.readAsText(input.files[0]);
 }
 
 
-
-
-// O navegador faz um GET por padrão
+//CARREGAR DADOS DA PLANILHA PAR O navegador usando "GET" por padrão
 async function carregarDadosDaNuvem() {
     console.log("Buscando dados na nuvem...");
     try {
@@ -443,39 +577,4 @@ async function carregarDadosDaNuvem() {
     } catch (err) {
         console.error("Erro ao baixar dados da nuvem (provavelmente vazia ou sem acesso GET):", err);
     }
-}
-
-// Funções de Importação com verificação de erro aprimorada
-function importarMovimentacao(input) {
-    if (!input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const json = JSON.parse(e.target.result);
-            if (!Array.isArray(json)) throw new Error("Formato inválido");
-            localStorage.setItem('registros', JSON.stringify(json));
-            atualizarTudo();
-            enviarParaGoogle('registros');
-            alert("✅ Importado e sincronizado!");
-        } catch (err) { alert("❌ Arquivo inválido! Use um JSON gerado pelo sistema."); }
-        input.value = "";
-    };
-    reader.readAsText(input.files[0]);
-}
-
-function importarCadastros(input) {
-    if (!input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const json = JSON.parse(e.target.result);
-            if (!Array.isArray(json)) throw new Error("Formato inválido");
-            localStorage.setItem('cadastroVeiculos', JSON.stringify(json));
-            atualizarTudo();
-            enviarParaGoogle('cadastroVeiculos');
-            alert("✅ Importado e sincronizado!");
-        } catch (err) { alert("❌ Arquivo inválido! Use um JSON gerado pelo sistema."); }
-        input.value = "";
-    };
-    reader.readAsText(input.files[0]);
 }
