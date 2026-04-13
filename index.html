@@ -39,6 +39,19 @@
             border-color: #ffc107; /* Cor amarela do seu sistema */
             box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
         }
+
+        /* Suaviza a troca de cor ao passar o mouse */
+       .btn-outline-info {
+            transition: all 0.3s ease;
+            border-width: 1.5px;
+            }
+
+/* Efeito de leve subida ao passar o mouse */
+    .btn-outline-info:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(13, 202, 240, 0.2);
+        color: white !important; /* Garante que o texto fique branco no fundo azul */
+    }
     </style>
 </head>
 
@@ -225,6 +238,11 @@
             Total Cadastrados: <span class="fs-4">🚗</span> 0 | <span class="fs-4">🏍️</span> 0
             </div>
 
+            <button class="btn btn-outline-info btn-sm border-2 text-dark fw-semibold px-3" style="border-style: dashed;" 
+                    onclick="exibirTotalPorMotorista()">
+                <span class="text-info">📋👤</span> Registros/Motorista
+        </button>
+            
             <button class="btn btn-outline-info btn-sm shadow-sm px-3" onclick="exibirTotalPorMotorista()">
                 <i class="bi bi-person-lines-fill me-1"></i>👤 Relatório por Motorista
             </button>
