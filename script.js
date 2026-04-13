@@ -337,7 +337,7 @@ function atualizarTabelaRegistros() {
                 <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
                 <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
                 <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
-                <td class="fw-bold">${permanencia}</td>
+                <td class="fw-bold">${permanencia} (Hora:Min:Seg)</td>
                 <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
             </tr>`;
     }).join('');
