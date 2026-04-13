@@ -103,6 +103,7 @@ function renderizarHistorico() {
             <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
             <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
             <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
+            <td>${x.permanencia}</td>
         </tr>`).join('');
 }
 /*
@@ -229,16 +230,20 @@ function importarMovimentacao(input) {
 // Função Auxiliar para calcular permanência
 function calcularPermanencia(entrada, saida) {
     if (!entrada || !saida) return "---";
+    
     const diff = new Date(saida) - new Date(entrada);
-        // Calcula horas e minutos totais
+    
+    // Calcula horas, minutos e segundos totais
     const horas = Math.floor(diff / (1000 * 60 * 60));
     const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const segundos = Math.floor((diff % (1000 * 60)) / 1000); // Nova linha para segundos
 
-    // .padStart(2, '0') garante que sempre existam 2 dígitos (ex: 05 em vez de 5)
+    // Formata para garantir sempre 2 dígitos
     const hFormatada = String(horas).padStart(2, '0');
     const mFormatada = String(minutos).padStart(2, '0');
+    const sFormatada = String(segundos).padStart(2, '0');
 
-    return `${hFormatada}:${mFormatada}`;
+    return `${hFormatada}:${mFormatada}:${sFormatada}`;
 }
 
 // --- EXPORTAR HISTÓRICO PARA EXCEL ---
@@ -322,6 +327,7 @@ function exportarPatioExcel() {
 
 
 /*inicio ABA CADASTRO para registro de motorista e veículos*/
+/**permanencia formata horário para HORA:MINUTOS:SEGUNDOS */
 function atualizarTabelaRegistros() {
     const r = JSON.parse(localStorage.getItem('registros') || '[]');
     const hoje = new Date().toLocaleDateString();
@@ -337,7 +343,7 @@ function atualizarTabelaRegistros() {
                 <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
                 <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
                 <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
-                <td class="fw-bold">${permanencia} (Hora:Minutos)</td>
+                <td class="fw-bold">${permanencia}</td>
                 <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
             </tr>`;
     }).join('');
