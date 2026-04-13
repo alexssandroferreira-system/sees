@@ -206,7 +206,7 @@ function importarMovimentacao(input) {
     reader.readAsText(input.files[0]);
 }
 
-
+/*incio ABA ENTRADA/DAIDA -- parte que está export PDF/EXCEL quando abre o MODAL "historico" */
 // Função Auxiliar para calcular permanência
 function calcularPermanencia(entrada, saida) {
     if (!entrada || !saida) return "---";
@@ -269,7 +269,6 @@ function exportarHistoricoPDF() {
 
     doc.save("Relatorio_Movimentacao_SEES.pdf");
 }
-// FIM - ABA ENTRADA/SAÍDA--- EXPORTAR HISTÓRICO PARA PDF ---
 
 // incio - ABA ENTRADA/SAÍDA----- EXPORTAR PÁTIO ATUAL (EXCEL) ---
 function exportarPatioExcel() {
@@ -291,6 +290,7 @@ function exportarPatioExcel() {
     XLSX.writeFile(wb, `Veiculos_No_Patio_Agora.xlsx`);
 }
 // FIM - ABA ENTRADA/SAÍDA----- EXPORTAR PÁTIO ATUAL (EXCEL) ---
+/*fim ABA ENTRADA/DAIDA -- parte que está export PDF/EXCEL quando abre o MODAL "historico" */
 
 /*FIM ABA DADOS REF. ENTRADA/SAÍDA DE VEÍCULOS POR MOTORISTA*/
 
