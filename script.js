@@ -210,7 +210,7 @@ function registrarEntrada() {
         if (veiculoNoPatio.motorista !== v.motorista) {
             return alert(`⚠️ BLOQUEIO: Este veículo (Placa ${v.placa}) já está no pátio com outro motorista: ${veiculoNoPatio.motorista}.`);
         }
-        return alert("⚠️ Este veículo já está no pátio.");
+   return alert(`⚠️ BLOQUEIO: Este veículo (Placa ${v.placa}) já está no pátio com outro motorista: ${veiculoNoPatio.motorista}.`);
     }
 
     r.unshift({ ...v, entrada: new Date().toISOString(), saida: null });
