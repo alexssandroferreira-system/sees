@@ -114,7 +114,7 @@ function filtrarMotoristasEntrada() {
     l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
         .forEach(v => {
             let o = document.createElement('option');
-            o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.placa}) - ${v.vinculo || ''}`;
+            o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.vinculo}) - <strong>${v.placa}</strong>  ${v.marca} / ${v.modelo}|| ''}`;
             s.appendChild(o);
         });
 }
