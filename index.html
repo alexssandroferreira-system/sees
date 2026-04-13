@@ -210,16 +210,22 @@
     <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
         
         <div class="d-flex align-items-center gap-2 flex-grow-1">
-            <div class="input-group" style="max-width: 550px;">
-                <span class="input-group-text bg-warning text-dark fw-bold">🔍 Buscar Motorista</span>
-                <input type="text" id="buscaCadastro" class="form-control" placeholder="Nome ou placa..." oninput="filtrarTabelaCadastro()">
-            </div>      
+            <div class="input-group" style="max-width: 500px;">
+    <span class="input-group-text bg-warning border-warning text-dark">
+        <i class="bi bi-search"></i>
+    </span>
+        <input type="text" id="buscaCadastro" class="form-control border-warning-subtle" placeholder="Digite o nome ou a placa..." 
+           style="box-shadow: none;" oninput="filtrarTabelaCadastro()">
+            <button class="btn btn-outline-warning text-dark" type="button" onclick="limparBusca()">Limpar</button>
+        </div>     
             <div id="contadorCadastrosVagas" class="badge bg-dark p-2 fs-6 shadow-sm w-100 text-wrap d-flex align-items-center justify-content-center gap-2">
             Total Cadastrados: <span class="fs-4">🚗</span> 0 | <span class="fs-4">🏍️</span> 0
             </div>
-            <button class="btn btn-info fw-bold text-nowrap" onclick="exibirTotalPorMotorista()">
-                👤 Relatório por Motorista
-            </button>
+           
+            <button class="btn btn-info btn-sm text-white shadow-sm px-3 fw-semibold" 
+        style="background-color: #0dcaf0; border: none; border-radius: 8px;" onclick="exibirTotalPorMotorista()">
+            <i class="bi bi-file-earmark-person"></i> 👤 Relatório por Motorista
+                </button>
         </div>
 
           </div>
