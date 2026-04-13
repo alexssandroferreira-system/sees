@@ -338,7 +338,7 @@ function atualizarTabelaRegistros() {
         const permanencia = x.saida ? calcularPermanencia(x.entrada, x.saida) : '-';
 
         return `
-            <tr>
+            <tr style="text-aling:center">
                 <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
                 <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
                 <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
