@@ -227,16 +227,22 @@
         
         <div class="d-flex align-items-center gap-2 flex-grow-1">
             <div class="input-group" style="max-width: 500px;">
-            <span class="input-group-text bg-warning border-warning text-dark">
-                    <i class="bi bi-search"></i>
-            </span>
+            <span class="input-group-text bg-warning border-warning text-dark"><i class="bi bi-search"></i> Pesquisar </span>
         <input type="text" id="buscaCadastro" class="form-control border-warning-subtle" placeholder="Digite o nome ou a placa..." 
            style="box-shadow: none;" oninput="filtrarTabelaCadastro()">
             <button class="btn btn-outline-warning text-dark" type="button" onclick="limparBusca()">Limpar</button>
         </div>   
+
+        <div class="input-group shadow-sm" style="max-width: 550px;"> <span class="input-group-text bg-warning border-warning text-dark">
+        <i class="bi bi-search me-2"></i> Pesquisar </span>
+        <input type="text" id="buscaCadastro" class="form-control border-warning-subtle ps-4" placeholder="Digite o nome ou a placa..." style="box-shadow: none; height: 45px;" 
+           oninput="filtrarTabelaCadastro()">
+    
+    <button class="btn btn-outline-warning text-dark" type="button" onclick="limparBusca()">Limpar</button>
+</div>
             
             <div id="contadorCadastrosVagas" class="badge bg-dark p-2 fs-6 shadow-sm w-100 text-wrap d-flex align-items-center justify-content-center gap-2">
-                    Total Cadastrados: <span class="fs-4">🚗</span> 0 | <span class="fs-4">🏍️</span> 0
+                    Total Cadastrados: <span class="fs-6">🚗</span> 0 | <span class="fs-6">🏍️</span> 0
             </div>
 
             <button class="btn btn-outline-info btn-sm border-2 text-dark fw-semibold px-3" style="border-style: dashed;" 
