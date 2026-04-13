@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     
@@ -34,8 +34,11 @@
             width: 100%;             /*111,11% Compensação matemática (100 / 0.9) para não sobrar espaço nas laterais */
             height: 100%;            /*111,11% Compensação matemática (100 / 0.9) para não sobrar espaço */
             overflow-x: hidden;         /* Evita barras de rolagem desnecessárias */
-}
-        
+        }
+        #buscaCadastro:focus {
+            border-color: #ffc107; /* Cor amarela do seu sistema */
+            box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+        }
     </style>
 </head>
 
@@ -221,14 +224,13 @@
             <div id="contadorCadastrosVagas" class="badge bg-dark p-2 fs-6 shadow-sm w-100 text-wrap d-flex align-items-center justify-content-center gap-2">
             Total Cadastrados: <span class="fs-4">🚗</span> 0 | <span class="fs-4">🏍️</span> 0
             </div>
-           
-            <button class="btn btn-info btn-sm text-white shadow-sm px-3 fw-semibold" 
-        style="background-color: #0dcaf0; border: none; border-radius: 8px;" onclick="exibirTotalPorMotorista()">
-            <i class="bi bi-file-earmark-person"></i> 👤 Relatório por Motorista
-                </button>
-        </div>
 
-          </div>
+            <button class="btn btn-outline-info btn-sm shadow-sm px-3" onclick="exibirTotalPorMotorista()">
+                <i class="bi bi-person-lines-fill me-1"></i>👤 Relatório por Motorista
+            </button>
+            
+           </div>
+     </div>
 </div>
        
         <div class="d-flex gap-2">
