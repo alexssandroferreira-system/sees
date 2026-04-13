@@ -105,7 +105,7 @@ function renderizarHistorico() {
             <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
         </tr>`).join('');
 }
-
+/*
 function filtrarMotoristasEntrada() {
     const t = document.getElementById('buscaEntrada').value.toLowerCase();
     const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
@@ -114,7 +114,26 @@ function filtrarMotoristasEntrada() {
     l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
         .forEach(v => {
             let o = document.createElement('option');
-            o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.vinculo}) - <strong>${v.placa}</strong>  ${v.marca} / ${v.modelo}|| ''}`;
+            o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.vinculo}) - <strong>${v.placa}</strong>  ${v.marca} / ${v.modelo}`;
+            s.appendChild(o);
+        });
+}
+*/
+function filtrarMotoristasEntrada() {
+    const t = document.getElementById('buscaEntrada').value.toLowerCase();
+    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    const s = document.getElementById('selectMotorista');
+    s.innerHTML = '<option value="">Selecione o Motorista...</option>';
+    
+    l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
+        .forEach(v => {
+            let o = document.createElement('option');
+            o.value = JSON.stringify(v);
+            
+            // Usamos .toUpperCase() para destacar a placa e hifens para separar
+            const placaDestaque = v.placa.toUpperCase();
+            o.textContent = `${v.motorista} (${v.vinculo}) | PLACA: ${placaDestaque} | ${v.marca} / ${v.modelo}`;
+            
             s.appendChild(o);
         });
 }
