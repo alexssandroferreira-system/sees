@@ -336,27 +336,34 @@ function exportarPatioExcel() {
 /**permanencia formata horário para HORA:MINUTOS:SEGUNDOS */
 function atualizarTabelaRegistros() {
     const r = JSON.parse(localStorage.getItem('registros') || '[]');
-    const hoje = new Date().toLocaleDateString();
-    const filtrados = r.filter(x => !x.saida || new Date(x.entrada).toLocaleDateString() === hoje);
+    const corpo = document.getElementById('tabelaRegistros');
+    if(!corpo) return;
 
-    document.getElementById('tabelaRegistros').innerHTML = filtrados.map((x, i) => {
-        // --- MELHORIA AQUI ---
-        // Se tem saída, calcula normal. 
-        // Se não tem saída (está no pátio), calcula usando a hora de AGORA.
-        const horaFim = x.saida ? x.saida : new Date().toISOString();
-        const permanencia = calcularPermanencia(x.entrada, horaFim);
+    corpo.innerHTML = r.map((x, i) => {
+        // AQUI ESTÁ O SEGREDO: Definir o tempo final para quem ainda não saiu
+        const fim = x.saida ? x.saida : new Date().toISOString();
+        
+        // Chamar sua função e guardar o resultado numa variável
+        const tempoPermanencia = calcularPermanencia(x.entrada, fim);
 
         return `
-            <tr style="text-align:center">
-                <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
-                <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
+            <tr>
+                <td>${x.motorista}</td>
+                <td>${x.vinculo}</td>
+                <td>${x.tipo}</td>
+                <td><b>${x.placa}</b></td>
+                <td>${x.marca}</td>
+                <td>${x.modelo}</td>
+                <td>${x.cor}</td>
+                <td>${x.ano}</td>
                 <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
-                <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
-                <td class="fw-bold font-monospace">${permanencia}</td>
+                <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge bg-success">No Pátio</span>'}</td>
+                <td class="fw-bold font-monospace text-center">${tempoPermanencia}</td>
                 <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
             </tr>`;
     }).join('');
 }
+
 
 function salvarCadastro() {
     const index = parseInt(document.getElementById('editIndex').value);
