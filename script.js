@@ -238,7 +238,7 @@ function calcularPermanencia(entrada, saida) {
     const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const segundos = Math.floor((diff % (1000 * 60)) / 1000); // Nova linha para segundos
 
-    // Formata para garantir sempre 2 dígitos
+    // Formata para garantir sempre 2 dígitos  HH:mm:ss
     const hFormatada = String(horas).padStart(2, '0');
     const mFormatada = String(minutos).padStart(2, '0');
     const sFormatada = String(segundos).padStart(2, '0');
@@ -343,7 +343,7 @@ function atualizarTabelaRegistros() {
                 <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
                 <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
                 <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge-patio">No Pátio</span>'}</td>
-                <td class="fw-bold">${permanencia}</td>
+                <td class="fw-bold">${x.permanencia}</td>
                 <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
             </tr>`;
     }).join('');
