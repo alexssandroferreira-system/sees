@@ -99,7 +99,7 @@ function renderizarHistorico() {
     
     document.getElementById('corpoHistorico').innerHTML = filtrados.map(x => {
         // CORREÇÃO: Calcular a permanência antes de retornar o HTML
-        const permanenciaVal = x.saida ? calcularPermanencia(x.entrada, x.saida) : '---';
+        const permanencia = x.saida ? calcularPermanencia(x.entrada, x.saida) : '---';
 
         return `
             <tr>
@@ -108,8 +108,8 @@ function renderizarHistorico() {
                 <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
                 <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
                 <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
-                <td class="text-center font-monospace">${permanenciaVal}</td>
-            </tr>`;
+            <td class="text-center font-monospace small">${permanencia}</td>           
+        </tr>`;
     }).join('');
 }
 /*
