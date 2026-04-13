@@ -188,31 +188,64 @@ function removerItem(key, i) {
 
 
 //parte da  ABA - ENTRADA/SAÍDA -- Funções auxiliares (Histórico, Exportação, Importação)...
-
+/**validações para Entrada/saída: 
+as funções precisam realizar uma conferencia se o tipo de veículo que está dando entrada/saída está 
+no pátio e não dar entrada novamente sem um saída, também não pode deixar dar saída em veículo que não
+esteja no pátio e muito menos da saída em que o veículo/placa seja diferente do que está no pátio. 
+tanto na entrada, quanto na saída não pode realizar o procedimento para o mesmo veículo para motoristas
+distintos, o veículo e placa para entrada/saída só pode estar associado a 1 motorista
+*/
 function registrarEntrada() {
     const s = document.getElementById('selectMotorista').value;
-    if (!s) return alert("Selecione um motorista!");
-    let r = JSON.parse(localStorage.getItem('registros') || '[]');
+    if (!s) return alert("❌ Selecione um motorista!");
+
     const v = JSON.parse(s);
-    if (r.find(x => x.placa === v.placa && !x.saida)) return alert("Já está no pátio!");
-    
+    let r = JSON.parse(localStorage.getItem('registros') || '[]');
+
+    // BUSCA GLOBAL PELA PLACA: Não importa o motorista, se a placa está no pátio, bloqueia.
+    const veiculoNoPatio = r.find(x => x.placa === v.placa && !x.saida);
+
+    if (veiculoNoPatio) {
+        // Se o motorista for diferente do que está tentando entrar agora
+        if (veiculoNoPatio.motorista !== v.motorista) {
+            return alert(`⚠️ BLOQUEIO: Este veículo (Placa ${v.placa}) já está no pátio com outro motorista: ${veiculoNoPatio.motorista}.`);
+        }
+        return alert("⚠️ Este veículo já está no pátio.");
+    }
+
     r.unshift({ ...v, entrada: new Date().toISOString(), saida: null });
     localStorage.setItem('registros', JSON.stringify(r));
     atualizarTudo();
     enviarParaGoogle('registros');
+    alert(`✅ Entrada liberada: ${v.motorista}`);
 }
 
 function registrarSaida() {
     const s = document.getElementById('selectMotorista').value;
-    if (!s) return alert("Selecione o motorista!");
+    if (!s) return alert("❌ Selecione o motorista!");
+
     const v = JSON.parse(s);
     let r = JSON.parse(localStorage.getItem('registros') || '[]');
-    let item = r.find(x => x.placa === v.placa && !x.saida);
-    if (!item) return alert("Não está no pátio!");
-    item.saida = new Date().toISOString();
+
+    // BUSCA PELA PLACA: Verifica quem entrou com este carro
+    let itemNoPatio = r.find(x => x.placa === v.placa && !x.saida);
+
+    if (!itemNoPatio) {
+        return alert("❌ Erro: Este veículo não consta no pátio.");
+    }
+
+    // VALIDAÇÃO DE MOTORISTA: Impede que o Motorista B dê saída no carro que o Motorista A entrou
+    if (itemNoPatio.motorista !== v.motorista) {
+        return alert(`❌ OPERAÇÃO NEGADA: A saída deste veículo (Placa ${v.placa}) deve ser realizada pelo motorista que registrou a entrada: ${itemNoPatio.motorista}.`);
+    }
+
+    // Se for o motorista correto, registra a saída
+    itemNoPatio.saida = new Date().toISOString();
+    
     localStorage.setItem('registros', JSON.stringify(r));
     atualizarTudo();
     enviarParaGoogle('registros');
+    alert(`✅ Saída confirmada para ${v.motorista}`);
 }
 
 //ABA - ENTRADA/SAÍDA --  Funções de Importação com verificação de erro aprimorada
