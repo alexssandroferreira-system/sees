@@ -103,7 +103,7 @@ function renderizarHistorico() {
             <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
             <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
             <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
-            <td>${x.permanencia}</td>
+            <td>${permanencia}</td>
         </tr>`).join('');
 }
 /*
