@@ -193,6 +193,7 @@ function atualizarTabelaCadastro() {
         </tr>`).join('');
 }
 
+/*inicio relatorio de quantidade de veiculos por motorista*/
 // Função para abrir o Modal de Total por Motorista
 function exibirTotalPorMotorista() {
     const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
@@ -260,6 +261,76 @@ window.onclick = function(event) {
     if (event.target == modalMot) modalMot.style.display = "none";
 }
 
+/*INICIO EXPORT "PDV/EXCEL"relatorio de quantidade de veiculos por motorista*/
+// Função auxiliar para preparar os dados (evita repetição de código)
+function prepararDadosRelatorio() {
+    const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    const agrupado = {};
+    
+    cadastros.forEach(v => {
+        const chave = v.motorista.toUpperCase();
+        if (!agrupado[chave]) {
+            agrupado[chave] = { vinculo: v.vinculo || 'Não informado', veiculos: [] };
+        }
+        agrupado[chave].veiculos.push(`${v.tipo}: ${v.modelo} (${v.placa}) - ${v.cor}`);
+    });
+
+    return Object.entries(agrupado).sort((a, b) => b[1].veiculos.length - a[1].veiculos.length);
+}
+
+// --- EXPORTAR EXCEL ---
+function baixarRelatorioMotoristaExcel() {
+    const lista = prepararDadosRelatorio();
+    const dadosExcel = lista.map(([nome, dados]) => ({
+        'Motorista': nome,
+        'Vínculo': dados.vinculo,
+        'Veículos': dados.veiculos.join(' | '),
+        'Total': dados.veiculos.length
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dadosExcel);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
+    XLSX.writeFile(wb, `Relatorio_Veiculos_por_Motorista.xlsx`);
+}
+
+// --- EXPORTAR PDF ---
+function baixarRelatorioMotoristaPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const lista = prepararDadosRelatorio();
+
+    // Título do PDF
+    doc.setFontSize(18);
+    doc.text("Relatório: Veículos por Motorista", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleString()}`, 14, 28);
+
+    // Formatar dados para a tabela do PDF
+    const rows = lista.map(([nome, dados]) => [
+        `${nome}\n(${dados.vinculo})`,
+        dados.veiculos.join('\n'),
+        dados.veiculos.length
+    ]);
+
+    doc.autoTable({
+        startY: 35,
+        head: [['Motorista', 'Veículos', 'Total']],
+        body: rows,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 123, 255] }, // Azul do sistema
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+            2: { halign: 'center', fontStyle: 'bold' }
+        }
+    });
+
+    doc.save(`Relatorio_Motoristas_SEES.pdf`);
+}
+/*fim EXPORT "PDV/EXCEL"relatorio de quantidade de veiculos por motorista*/
+
+
+/*fim relatorio de quantidade de veiculos por motorista*/
 
 
 function filtrarTabelaCadastro() {
