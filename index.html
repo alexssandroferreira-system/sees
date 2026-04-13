@@ -167,7 +167,10 @@
             <div class="input-group" style="max-width: 400px;">
                 <span class="input-group-text bg-warning text-dark fw-bold">🔍 Buscar Motorista</span>
                 <input type="text" id="buscaCadastro" class="form-control" placeholder="Nome ou placa..." oninput="filtrarTabelaCadastro()">
-            </div>                                        
+            </div>      
+            <div id="contadorCadastrosVagas" class="badge bg-dark p-2 fs-6 shadow-sm w-100 text-wrap">
+                    Total Cadastrados: 🚗 0 | 🏍️ 0
+                </div>
             <button class="btn btn-info fw-bold text-nowrap" onclick="exibirTotalPorMotorista()">
                 👤 Relatório por Motorista
             </button>
