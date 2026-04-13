@@ -211,9 +211,15 @@ function importarMovimentacao(input) {
 function calcularPermanencia(entrada, saida) {
     if (!entrada || !saida) return "---";
     const diff = new Date(saida) - new Date(entrada);
+        // Calcula horas e minutos totais
     const horas = Math.floor(diff / (1000 * 60 * 60));
     const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${horas}h ${minutos}min`;
+
+    // .padStart(2, '0') garante que sempre existam 2 dígitos (ex: 05 em vez de 5)
+    const hFormatada = String(horas).padStart(2, '0');
+    const mFormatada = String(minutos).padStart(2, '0');
+
+    return `${hFormatada}:${mFormatada}`;
 }
 
 // --- EXPORTAR HISTÓRICO PARA EXCEL ---
