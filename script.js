@@ -469,9 +469,12 @@ function atualizarTabelaCadastro() {
     const totalCarros = l.filter(v => (v.tipo || '').toLowerCase() === 'carro').length;
     const totalMotos = l.filter(v => (v.tipo || '').toLowerCase() === 'moto').length;
     
-    const elVagas = document.getElementById('contadorCadastrosVagas');
-    if (elVagas) elVagas.innerHTML = `Total Cadastrados: 🚗 ${totalCarros} | 🏍️ ${totalMotos}`;
-
+// Dentro da função atualizarTabelaCadastro
+const elVagas = document.getElementById('contadorCadastrosVagas');
+if (elVagas) {
+    elVagas.innerHTML = `Total Cadastrados: <span class="fs-5">🚗</span> ${totalCarros} | <span class="fs-5">🏍️</span> ${totalMotos}`;
+}
+        
     document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
         <tr>
             <td>${v.motorista}</td><td><strong class="text-muted">${v.vinculo}</strong></td>
