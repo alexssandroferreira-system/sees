@@ -1,4 +1,30 @@
 // --- IMPORTAÇÕES DO FIREBASE (Certifique-se de carregar o Firebase no HTML antes deste script) ---
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyC_fyeWOZVJu0ENa5SUZiRabb3Y0Dnngtc",
+  authDomain: "sees-ap.firebaseapp.com",
+  projectId: "sees-ap",
+  storageBucket: "sees-ap.firebasestorage.app",
+  messagingSenderId: "963892404731",
+  appId: "1:963892404731:web:4e9a0ab61de8c07ecbeb5e",
+  measurementId: "G-Z21ENCCBTF"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
+
+  // Torna o 'db' acessível para suas funções globais
+  window.db = db;
+
 import { 
     getFirestore, collection, addDoc, getDocs, doc, setDoc, query, orderBy, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
