@@ -505,22 +505,6 @@ function filtrarTabelaCadastro() {
             </tr>`).join('');
 }
 
-/*inicio função LIMPAR botão pesquisar motorista/placa*/
-function limparBusca() {
-    // 1. Localiza o campo de input
-    const input = document.getElementById('buscaCadastro');
-    
-    // 2. Limpa o texto dentro dele
-    input.value = "";
-    
-    // 3. Chama a função de filtrar (como o campo está vazio, ela mostrará todos os registros)
-    filtrarTabelaCadastro();
-    
-    // 4. Coloca o foco de digitação de volta no campo (opcional, mas profissional)
-    input.focus();
-}
-/*fim função LIMPAR botão pesquisar motorista/placa*/
-
 /*fim filtro ABA CADASTRO -- BUSCAR MOTORISTA/PLACA*/
 
 
