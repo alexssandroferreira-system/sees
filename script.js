@@ -2,41 +2,288 @@
 const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbxSgnWz56Ys0oGyZF-JSuZFXn7RIOxQEA4Fer9kZRSavEpaB5G9hOwGrtPMvpAwugzXSA/exec";
 
 function enviarParaGoogle(key) {
-    const dadosOriginais = JSON.parse(localStorage.getItem(key) || '[]');
+    const dados = JSON.parse(localStorage.getItem(key) || '[]');
     const nomeAmigavel = key === 'registros' ? 'Entrada/Saída e Registros' : 'Cadastro de Veículos';
-
-    // --- AJUSTE AQUI ---
-    // Criamos uma nova lista de dados para não modificar o que está salvo no navegador
-    let dadosParaEnviar = dadosOriginais;
-
-    if (key === 'registros') {
-        dadosParaEnviar = dadosOriginais.map(item => {
-            // Se o veículo já saiu, calcula a permanência real. 
-            // Se ainda está no pátio, calcula a permanência até o momento atual (Agora).
-            const dataFim = item.saida ? item.saida : new Date().toISOString();
-            
-            return {
-                ...item, // Mantém todos os campos originais (nome, placa, entrada, etc)
-                permanencia: calcularPermanencia(item.entrada, dataFim) // Acrescenta a nova coluna
-            };
-        });
-    }
 
     fetch(GOOGLE_API_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sheetName: key, data: dadosParaEnviar }) // Enviamos os dados ajustados
+        body: JSON.stringify({ sheetName: key, data: dados })
     })
     .then(() => {
-        console.log(`Dados de ${key} sincronizados com sucesso.`);
-        alert(`✅ Sucesso!\nOs dados de "${nomeAmigavel}" foram enviados para a nuvem.`);
+        console.log(`Dados de ${key} sincronizados.`);
+        // alert(`✅ Sucesso!\nOs dados de "${nomeAmigavel}" foram enviados para a nuvem.`);
     })
     .catch(err => {
         console.error("Erro ao sincronizar:", err);
         alert(`❌ Erro de Conexão!\nVerifique sua internet.`);
     });
 }
+
+// --- inicio LOGIN  NOVO: GESTÃO DE USUÁRIOS E AUDITORIA ---
+
+//inicio  LOGIN USUARIO ATIVO Dentro da sua função realizarLogin
+
+ /*else { //para indiar usuario direto
+        // Fallback: Caso a planilha falhe ou seja o admin padrão offline
+        if (emailDigitado === "admin@sees.com" && senhaDigitada === "123456") {
+            realizarLogin("admin@sees.com");
+        } else {
+            alert("Usuário não encontrado na planilha ou senha incorreta!");
+        }
+*/    
+// --- 1. INICIALIZAÇÃO DO SISTEMA (PERSISTÊNCIA DE SESSÃO) ---
+// --- 1. INICIALIZAÇÃO DO SISTEMA ---
+// --- 1. INICIALIZAÇÃO E PERSISTÊNCIA (window.onload) ---
+window.onload = async () => {
+    console.log("Sincronizando sistema...");
+
+    // Tenta recuperar a sessão salva no navegador
+    const sessaoSalva = localStorage.getItem('sees_session');
+
+    if (sessaoSalva) {
+        try {
+            const usuario = JSON.parse(sessaoSalva);
+            console.log("Sessão restaurada para:", usuario.email);
+            
+            // Chama a função de interface passando o usuário recuperado
+            liberarSistema(usuario);
+        } catch (e) {
+            console.error("Erro na sessão salva:", e);
+            localStorage.removeItem('sees_session');
+        }
+    }
+
+    // Carrega configurações de vagas
+    const config = JSON.parse(localStorage.getItem('configVagas') || '{"carro":0, "moto":0}');
+    if (document.getElementById('vCarro')) document.getElementById('vCarro').value = config.carro;
+    if (document.getElementById('vMoto')) document.getElementById('vMoto').value = config.moto;
+
+    // Sincroniza com a nuvem e atualiza interface geral
+    await carregarDadosDaNuvem(); 
+    atualizarTudo();
+    atualizarTabelaLogs();
+};
+
+// --- 2. CONTROLE DE INTERFACE (Exibição do Nav e Conteúdo) ---
+function liberarSistema(dadosUsuario) {
+    const loginOverlay = document.getElementById('loginOverlay');
+    const sistemaConteudo = document.getElementById('sistemaConteudo');
+    const txtPerfil = document.getElementById('txtUserPerfil');
+
+    // RESOLVE O PROBLEMA DO NAV: Preenche o span antes de mostrar o sistema
+    if (txtPerfil && dadosUsuario) {
+        txtPerfil.innerText = `${dadosUsuario.nome} | ${dadosUsuario.perfil}`;
+    }
+
+    // Esconde o login e mostra o sistema
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    if (sistemaConteudo) sistemaConteudo.style.display = 'block';
+
+    // Chama funções de atualização se existirem
+    if (typeof atualizarGraficos === 'function') atualizarGraficos();
+    
+    console.log("Interface liberada para:", dadosUsuario.nome);
+}
+
+// --- 3. PROCESSO DE LOGIN ---
+document.getElementById('formLogin').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const emailDigitado = document.getElementById('loginEmail').value; 
+    const senhaDigitada = document.getElementById('loginSenha').value;
+    const listaUsuariosRaw = localStorage.getItem('usuarios');
+
+    if (!listaUsuariosRaw) {
+        alert("Erro: Dados não carregados. Aguarde a sincronização ou recarregue (F5).");
+        return;
+    }
+    
+    const listaUsuarios = JSON.parse(listaUsuariosRaw);
+
+    const usuarioValido = listaUsuarios.find(u => {
+        const emailPlanilha = (u.Email || u.email || "").toString().trim();
+        const senhaPlanilha = (u.Senha || u.senha || "").toString().trim();
+        return emailPlanilha === emailDigitado.trim() && senhaPlanilha === senhaDigitada.trim();
+    });
+
+    if (usuarioValido) {
+        const agora = new Date();
+        
+        // Criação do objeto de sessão com formatação PT-BR definitiva
+        const dadosSession = {
+            nome: (usuarioValido.Nome || usuarioValido.nome || "Usuário").toUpperCase(),
+            // Captura o perfil da planilha (ADM, SUPORTE, PORTARIA, etc)
+            perfil: (usuarioValido.Perfil || usuarioValido.perfil || "OPERADOR").toUpperCase(),
+            email: emailDigitado.toLowerCase(),
+            data: agora.toLocaleDateString('pt-BR'), 
+            entrada: agora.toLocaleTimeString('pt-BR'),
+            saida: "Sessão Ativa",
+            navegador: navigator.userAgent.split(') ')[1] || "Browser"
+        };
+
+        // Salva nos logs locais para auditoria
+        let logs = JSON.parse(localStorage.getItem('loginperfil') || '[]');
+        logs.unshift(dadosSession);
+        localStorage.setItem('loginperfil', JSON.stringify(logs));
+        
+        // Envia para o Google Sheets (Aba loginperfil)
+        if (typeof enviarParaGoogle === 'function') enviarParaGoogle('loginperfil');
+
+        // Salva a sessão ativa e libera a interface
+        localStorage.setItem('sees_session', JSON.stringify(dadosSession));
+        liberarSistema(dadosSession);
+        atualizarTabelaLogs();
+        
+        setTimeout(() => alert(`Bem-vindo, ${dadosSession.nome}!`), 100);
+    } else {
+        alert("Acesso Negado: E-mail ou Senha incorretos.");
+    }
+});
+
+// --- 4. LOGOUT UNIFICADO (Encerramento de Sessão) ---
+function encerrarSessao() {
+    if (!confirm("Deseja realmente sair do sistema?")) return;
+
+    let logs = JSON.parse(localStorage.getItem('loginperfil') || '[]');
+    
+    // Atualiza o horário de saída no último log do usuário logado
+    if (logs.length > 0 && logs[0].saida === "Sessão Ativa") {
+        logs[0].saida = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        localStorage.setItem('loginperfil', JSON.stringify(logs));
+        
+        if (typeof enviarParaGoogle === 'function') enviarParaGoogle('loginperfil');
+    }
+
+    // Limpa o LocalStorage da sessão e recarrega
+    localStorage.removeItem('sees_session');
+    location.reload();
+}
+
+// --- 5. GESTÃO DA TABELA DE LOGS ---
+// --- FUNÇÃO AUXILIAR (O Segredo para limpar a data da imagem) ---
+function formatarDadoPlanilha(valor, tipo) {
+    if (!valor) return "---";
+    let texto = valor.toString();
+
+    // Se o valor contiver o "T" (padrão ISO que vimos na sua imagem)
+    if (texto.includes('T')) {
+        const partes = texto.split('T');
+        if (tipo === 'data') {
+            // Transforma 2026-04-16 em 16/04/2026
+            return partes[0].split('-').reverse().join('/');
+        }
+        if (tipo === 'hora') {
+            // Pega apenas o 00:00:00 da string 1970-01-01T00:00:00
+            return partes[1].substring(0, 8);
+        }
+    }
+
+    // Caso especial para Saída: Sessão Ativa
+    if (tipo === 'saida') {
+        if (texto.toUpperCase().includes("SESS") || texto === "Sessão Ativa") {
+            return '<span class="badge bg-success text-white">SESSÃO ATIVA</span>';
+        }
+    }
+
+    return texto;
+}
+
+// --- ATUALIZAR TABELA (Com as correções de formato) ---
+function atualizarTabelaLogs() {
+    const logs = JSON.parse(localStorage.getItem('loginperfil') || '[]');
+    const corpo = document.getElementById('tabelaLogsLogin');
+    if (!corpo) return;
+
+    corpo.innerHTML = logs.map(log => `
+        <tr>
+            <td>${formatarDadoPlanilha(log.data, 'data')}</td>
+            <td><span class="badge ${log.perfil === 'ADMINISTRADOR' ? 'bg-danger' : 'bg-primary'}">${log.perfil}</span></td>
+            <td class="fw-bold">${log.nome}</td>
+            <td>${log.email}</td>
+            <td>${formatarDadoPlanilha(log.entrada, 'hora')}</td>
+            <td>${formatarDadoPlanilha(log.saida, 'saida')}</td>
+            <td class="small text-muted" style="font-size: 0.7rem;">${log.navegador || '---'}</td>
+        </tr>
+    `).join('');
+}
+
+// --- FILTRAR TABELA (Mantendo a mesma lógica de limpeza) ---
+function filtrarTabelaLogs() {
+    const termo = document.getElementById('buscaLogs').value.toLowerCase();
+    const logs = JSON.parse(localStorage.getItem('loginperfil') || '[]');
+    const filtrados = logs.filter(log => 
+        log.nome.toLowerCase().includes(termo) || 
+        log.email.toLowerCase().includes(termo) || 
+        log.perfil.toLowerCase().includes(termo) ||
+        log.data.toString().includes(termo)
+    );
+    
+    const corpo = document.getElementById('tabelaLogsLogin');
+    if (!corpo) return;
+
+    corpo.innerHTML = filtrados.map(log => `
+        <tr>
+            <td>${formatarDadoPlanilha(log.data, 'data')}</td>
+            <td><span class="badge ${log.perfil === 'ADMINISTRADOR' ? 'bg-danger' : 'bg-primary'}">${log.perfil}</span></td>
+            <td class="fw-bold">${log.nome}</td>
+            <td>${log.email}</td>
+            <td>${formatarDadoPlanilha(log.entrada, 'hora')}</td>
+            <td>${formatarDadoPlanilha(log.saida, 'saida')}</td>
+            <td class="small text-muted" style="font-size: 0.7rem;">${log.navegador || '---'}</td>
+        </tr>
+    `).join('');
+}
+
+
+function importarLogs(input) {
+    if (!input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const json = JSON.parse(e.target.result);
+            if (!Array.isArray(json)) throw new Error("Formato inválido");
+            localStorage.setItem('loginperfil', JSON.stringify(json));
+            atualizarTabelaLogs();
+            if (typeof enviarParaGoogle === 'function') enviarParaGoogle('loginperfil');
+            alert("✅ Logs importados e sincronizados!");
+        } catch (err) { 
+            alert("❌ Arquivo inválido!"); 
+        }
+        input.value = "";
+    };
+    reader.readAsText(input.files[0]);
+}
+
+function encerrarSessao() {
+    if (!confirm("Deseja realmente sair do sistema?")) return;
+
+    // 1. REGISTRO DE AUDITORIA (Carimba a hora de saída no log)
+    let logs = JSON.parse(localStorage.getItem('loginperfil') || '[]');
+    
+    // Verifica se o último log é deste usuário e ainda está marcado como "Sessão Ativa"
+    if (logs.length > 0 && logs[0].saida === "Sessão Ativa") {
+        logs[0].saida = new Date().toLocaleTimeString('pt-BR');
+        localStorage.setItem('loginperfil', JSON.stringify(logs));
+        
+        // Envia para a planilha o registro com o horário de saída preenchido
+        if (typeof enviarParaGoogle === 'function') {
+            enviarParaGoogle('loginperfil');
+        }
+    }
+
+    // 2. LIMPEZA DE ACESSO
+    // Remove a chave que mantém o usuário logado ao dar F5
+    localStorage.removeItem('sees_session');
+
+    // 3. RESET DO SISTEMA
+    // Recarrega a página para voltar à tela de login
+    location.reload();
+}
+
+// ---FIM LOGIN LÓGICA DE GRÁFICOS E PÁTIO (MANTIDA INTEGRALMENTE) ---
+//inicio  LOGIN USUARIO ATIVO Dentro da sua função realizarLogin
 
 
 let chartCarros = null;
@@ -48,29 +295,13 @@ setInterval(() => {
     if (el) el.innerText = new Date().toLocaleString('pt-BR');
 }, 1000);
 
-/*INICIO CABECAÇHO COM GRÁFICOS TOTAL DE VAGAS PARA CARRO/MOTO*/
-// UNIFICADO: Apenas um window.onload
-window.onload = () => {
-    const config = JSON.parse(localStorage.getItem('configVagas') || '{"carro":0, "moto":0}');
-    const vCarro = document.getElementById('vCarro');
-    const vMoto = document.getElementById('vMoto');
-    
-    if (vCarro) vCarro.value = config.carro;
-    if (vMoto) vMoto.value = config.moto;
-    
-    atualizarTudo();
-    carregarDadosDaNuvem(); 
-};
-
-function atualizarTudo() {
-    atualizarTabelaCadastro();
-    atualizarTabelaRegistros();
-    atualizarGraficos();
-}
 
 
 function salvarVagas() {
-    const v = { carro: parseInt(document.getElementById('vCarro').value) || 0, moto: parseInt(document.getElementById('vMoto').value) || 0 };
+    const v = { 
+        carro: parseInt(document.getElementById('vCarro').value) || 0, 
+        moto: parseInt(document.getElementById('vMoto').value) || 0 
+    };
     localStorage.setItem('configVagas', JSON.stringify(v));
     atualizarGraficos();
     alert("Vagas atualizadas!");
@@ -79,70 +310,84 @@ function salvarVagas() {
 function atualizarGraficos() {
     const config = JSON.parse(localStorage.getItem('configVagas') || '{"carro":0, "moto":0}');
     const registros = JSON.parse(localStorage.getItem('registros') || '[]');
+    
     const ocupCarros = registros.filter(r => !r.saida && (r.tipo || '').toLowerCase().includes('carro')).length;
     const ocupMotos = registros.filter(r => !r.saida && (r.tipo || '').toLowerCase().includes('moto')).length;
+    
     const livreCarros = Math.max(0, config.carro - ocupCarros);
     const livreMotos = Math.max(0, config.moto - ocupMotos);
 
-    document.getElementById('statusCarros').innerHTML = `<span class="verde">Livres: ${livreCarros}</span> | <span class="vermelho">Ocup: ${ocupCarros}</span>`;
-    document.getElementById('statusMotos').innerHTML = `<span class="verde">Livres: ${livreMotos}</span> | <span class="vermelho">Ocup: ${ocupMotos}</span>`;
+    const elC = document.getElementById('statusCarros');
+    const elM = document.getElementById('statusMotos');
+    
+    if(elC) elC.innerHTML = `<span class="text-success">Livres: ${livreCarros}</span> | <span class="text-danger">Ocup: ${ocupCarros}</span>`;
+    if(elM) elM.innerHTML = `<span class="text-success">Livres: ${livreMotos}</span> | <span class="text-danger">Ocup: ${ocupMotos}</span>`;
 
     chartCarros = renderDonut('graficoCarros', chartCarros, livreCarros, ocupCarros, '#007bff');
     chartMotos = renderDonut('graficoMotos', chartMotos, livreMotos, ocupMotos, '#ffc107');
 }
 
 function renderDonut(id, chart, livre, ocup, cor) {
-    const ctx = document.getElementById(id).getContext('2d');
+    const canvas = document.getElementById(id);
+    if (!canvas) return null;
+    const ctx = canvas.getContext('2d');
     if (chart) chart.destroy();
     return new Chart(ctx, {
         type: 'doughnut',
-        data: { labels: ['Livre', 'Ocupado'], datasets: [{ data: [livre, ocup], backgroundColor: ['#28a745', cor] }] },
+        data: { 
+            labels: ['Livre', 'Ocupado'], 
+            datasets: [{ data: [livre, ocup], backgroundColor: ['#28a745', cor] }] 
+        },
         options: { responsive: true, plugins: { legend: { display: false } }, cutout: '70%' }
     });
 }
-/*INICIO CABECAÇHO COM GRÁFICOS TOTAL DE VAGAS PARA CARRO/MOTO*/
 
 
-/*INICIO ABA DADOS REF. ENTRADA/SAÍDA DE VEÍCULOS POR MOTORISTA*/
 
-//INICIO ABA - ENTRADA/SAÍDA -- Funções auxiliares (Histórico, Exportação, Importação)...
-function abrirHistorico() { document.getElementById('modalHistorico').style.display = 'block'; renderizarHistorico(); }
-function fecharHistorico() { document.getElementById('modalHistorico').style.display = 'none'; }
+function atualizarTudo() {
+    atualizarTabelaCadastro();
+    atualizarTabelaRegistros();
+    atualizarGraficos();
+    atualizarTabelaLogs(); // Incluído na atualização geral
+}
+
+// --- ABA ENTRADA/SAÍDA ---
+
+function abrirHistorico() { 
+    document.getElementById('modalHistorico').style.display = 'block'; 
+    renderizarHistorico(); 
+}
+
+function fecharHistorico() { 
+    document.getElementById('modalHistorico').style.display = 'none'; 
+}
 
 function renderizarHistorico() {
     const r = JSON.parse(localStorage.getItem('registros') || '[]');
-    const f = document.getElementById('filtroHistorico').value.toLowerCase();
-    const filtrados = r.filter(x => x.motorista.toLowerCase().includes(f) || x.placa.toLowerCase().includes(f));
+    const f = (document.getElementById('filtroHistorico')?.value || "").toLowerCase();
     
-    document.getElementById('corpoHistorico').innerHTML = filtrados.map(x => {
-        // CORREÇÃO: Calcular a permanência antes de retornar o HTML
-        const permanencia = x.saida ? calcularPermanencia(x.entrada, x.saida) : '---';
+    const filtrados = r.filter(x => 
+        (x.motorista || "").toLowerCase().includes(f) || 
+        (x.placa || "").toLowerCase().includes(f)
+    );
 
-        return `
-            <tr>
-                <td>${new Date(x.entrada).toLocaleDateString()}</td>
-                <td>${x.motorista}</td><td>${x.vinculo}</td><td>${x.tipo}</td><td><b>${x.placa}</b></td>
-                <td>${x.marca}</td><td>${x.modelo}</td><td>${x.cor}</td><td>${x.ano}</td>
-                <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
-                <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
-            <td class="text-center font-monospace small">${permanencia}</td>           
-        </tr>`;
-    }).join('');
+    document.getElementById('corpoHistorico').innerHTML = filtrados.map(x => `
+        <tr>
+            <td>${x.entrada ? new Date(x.entrada).toLocaleDateString() : '---'}</td>
+            <td>${x.motorista}</td>
+            <td>${x.vinculo}</td>
+            <td>${x.tipo}</td>
+            <td><b>${x.placa}</b></td>
+            <td>${x.marca}</td>
+            <td>${x.modelo}</td>
+            <td>${x.cor}</td>
+            <td>${x.ano}</td>
+            <td class="small">${x.entrada ? new Date(x.entrada).toLocaleTimeString() : '---'}</td>
+            <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '---'}</td>
+            <td><b>${calcularPermanencia(x.entrada, x.saida)}</b></td>
+        </tr>`).join('');
 }
-/*
-function filtrarMotoristasEntrada() {
-    const t = document.getElementById('buscaEntrada').value.toLowerCase();
-    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
-    const s = document.getElementById('selectMotorista');
-    s.innerHTML = '<option value="">Selecione o Motorista...</option>';
-    l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
-        .forEach(v => {
-            let o = document.createElement('option');
-            o.value = JSON.stringify(v); o.textContent = `${v.motorista} (${v.vinculo}) - <strong>${v.placa}</strong>  ${v.marca} / ${v.modelo}`;
-            s.appendChild(o);
-        });
-}
-*/
+
 function filtrarMotoristasEntrada() {
     const t = document.getElementById('buscaEntrada').value.toLowerCase();
     const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
@@ -152,12 +397,8 @@ function filtrarMotoristasEntrada() {
     l.filter(v => v.motorista.toLowerCase().includes(t) || v.placa.toLowerCase().includes(t))
         .forEach(v => {
             let o = document.createElement('option');
-            o.value = JSON.stringify(v);
-            
-            // Usamos .toUpperCase() para destacar a placa e hifens para separar
-            const placaDestaque = v.placa.toUpperCase();
-            o.textContent = `${v.motorista} (${v.vinculo}) | PLACA: ${placaDestaque} | ${v.marca} / ${v.modelo}`;
-            
+            o.value = JSON.stringify(v); 
+            o.textContent = `${v.motorista} - ${v.vinculo} / ${v.tipo}(${v.placa}) - ${v.modelo}`;
             s.appendChild(o);
         });
 }
@@ -166,18 +407,54 @@ function preencherCamposEntrada() {
     const val = document.getElementById('selectMotorista').value;
     if (!val) return;
     const v = JSON.parse(val);
-    document.getElementById('eVinculo').value = v.vinculo;
-    document.getElementById('ePlaca').value = v.placa;
-    document.getElementById('eTipo').value = v.tipo;
-    document.getElementById('eMarca').value = v.marca;
-    document.getElementById('eModelo').value = v.modelo;
-    document.getElementById('eCor').value = v.cor;
-    document.getElementById('eAno').value = v.ano;
+    document.getElementById('eVinculo').value = v.vinculo || "";
+    document.getElementById('ePlaca').value = v.placa || "";
+    document.getElementById('eTipo').value = v.tipo || "";
+    document.getElementById('eMarca').value = v.marca || "";
+    document.getElementById('eModelo').value = v.modelo || "";
+    document.getElementById('eCor').value = v.cor || "";
+    document.getElementById('eAno').value = v.ano || "";
+}
+
+function registrarEntrada() {
+    const s = document.getElementById('selectMotorista').value;
+    if (!s) return alert("Selecione um motorista!");
+    let r = JSON.parse(localStorage.getItem('registros') || '[]');
+    const v = JSON.parse(s);
+    
+    if (r.find(x => x.placa === v.placa && !x.saida)) return alert("Este veículo já está no pátio!");
+    
+    const novoRegistro = { 
+        ...v, 
+        entrada: new Date().toISOString(), 
+        saida: null,
+        data: new Date().toLocaleDateString()
+    };
+    
+    r.unshift(novoRegistro);
+    localStorage.setItem('registros', JSON.stringify(r));
+    atualizarTudo();
+    enviarParaGoogle('registros');
+}
+
+function registrarSaida() {
+    const s = document.getElementById('selectMotorista').value;
+    if (!s) return alert("Selecione o motorista!");
+    const v = JSON.parse(s);
+    let r = JSON.parse(localStorage.getItem('registros') || '[]');
+    let item = r.find(x => x.placa === v.placa && !x.saida);
+    
+    if (!item) return alert("Este veículo não consta como presente no pátio!");
+    
+    item.saida = new Date().toISOString();
+    localStorage.setItem('registros', JSON.stringify(r));
+    atualizarTudo();
+    enviarParaGoogle('registros');
 }
 
 function removerItem(key, i) {
-    if (confirm('Excluir?')) {
-        let l = JSON.parse(localStorage.getItem(key));
+    if (confirm('Deseja realmente excluir este registro?')) {
+        let l = JSON.parse(localStorage.getItem(key) || '[]');
         l.splice(i, 1);
         localStorage.setItem(key, JSON.stringify(l));
         atualizarTudo();
@@ -185,69 +462,17 @@ function removerItem(key, i) {
     }
 }
 
+// --- EXPORTAÇÃO E IMPORTAÇÃO ---
 
-//parte da  ABA - ENTRADA/SAÍDA -- Funções auxiliares (Histórico, Exportação, Importação)...
-/**validações para Entrada/saída: 
-as funções precisam realizar uma conferencia se o tipo de veículo que está dando entrada/saída está 
-no pátio e não dar entrada novamente sem um saída, também não pode deixar dar saída em veículo que não
-esteja no pátio e muito menos da saída em que o veículo/placa seja diferente do que está no pátio. 
-tanto na entrada, quanto na saída não pode realizar o procedimento para o mesmo veículo para motoristas
-distintos, o veículo e placa para entrada/saída só pode estar associado a 1 motorista
-*/
-function registrarEntrada() {
-    const s = document.getElementById('selectMotorista').value;
-    if (!s) return alert("❌ Selecione um motorista!");
-
-    const v = JSON.parse(s);
-    let r = JSON.parse(localStorage.getItem('registros') || '[]');
-
-    // BUSCA GLOBAL PELA PLACA: Não importa o motorista, se a placa está no pátio, bloqueia.
-    const veiculoNoPatio = r.find(x => x.placa === v.placa && !x.saida);
-
-    if (veiculoNoPatio) {
-        // Se o motorista for diferente do que está tentando entrar agora
-        if (veiculoNoPatio.motorista !== v.motorista) {
-            return alert(`⚠️ BLOQUEIO: Este veículo (Placa ${v.placa}) já está no pátio com outro motorista: ${veiculoNoPatio.motorista}.`);
-        }
-   return alert(`⚠️ BLOQUEIO: Este veículo (Placa ${v.placa}) já está no pátio com outro motorista: ${veiculoNoPatio.motorista}.`);
-    }
-
-    r.unshift({ ...v, entrada: new Date().toISOString(), saida: null });
-    localStorage.setItem('registros', JSON.stringify(r));
-    atualizarTudo();
-    enviarParaGoogle('registros');
-    alert(`✅ Entrada liberada: ${v.motorista}`);
+function calcularPermanencia(entrada, saida) {
+    if (!entrada || !saida) return "---";
+    const diff = new Date(saida) - new Date(entrada);
+    if (diff < 0) return "---";
+    const horas = Math.floor(diff / (1000 * 60 * 60));
+    const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${horas}h ${minutos}min`;
 }
 
-function registrarSaida() {
-    const s = document.getElementById('selectMotorista').value;
-    if (!s) return alert("❌ Selecione o motorista!");
-
-    const v = JSON.parse(s);
-    let r = JSON.parse(localStorage.getItem('registros') || '[]');
-
-    // BUSCA PELA PLACA: Verifica quem entrou com este carro
-    let itemNoPatio = r.find(x => x.placa === v.placa && !x.saida);
-
-    if (!itemNoPatio) {
-        return alert("❌ Erro: Este veículo não consta no pátio.");
-    }
-
-    // VALIDAÇÃO DE MOTORISTA: Impede que o Motorista B dê saída no carro que o Motorista A entrou
-    if (itemNoPatio.motorista !== v.motorista) {
-        return alert(`❌ OPERAÇÃO NEGADA: A saída deste veículo (Placa ${v.placa}) deve ser realizada pelo motorista que registrou a entrada: ${itemNoPatio.motorista}.`);
-    }
-
-    // Se for o motorista correto, registra a saída
-    itemNoPatio.saida = new Date().toISOString();
-    
-    localStorage.setItem('registros', JSON.stringify(r));
-    atualizarTudo();
-    enviarParaGoogle('registros');
-    alert(`✅ Saída confirmada para ${v.motorista}`);
-}
-
-//ABA - ENTRADA/SAÍDA --  Funções de Importação com verificação de erro aprimorada
 function exportarJSON(key, f) {
     const data = localStorage.getItem(key) || '[]';
     const blob = new Blob([data], { type: 'application/json' });
@@ -265,55 +490,17 @@ function exportarExcel(key, f) {
     XLSX.writeFile(wb, `${f}.xlsx`);
 }
 
-function importarMovimentacao(input) {
-    if (!input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const json = JSON.parse(e.target.result);
-            if (!Array.isArray(json)) throw new Error("Formato inválido");
-            localStorage.setItem('registros', JSON.stringify(json));
-            atualizarTudo();
-            enviarParaGoogle('registros');
-            alert("✅ Importado e sincronizado!");
-        } catch (err) { alert("❌ Arquivo inválido! Use um JSON gerado pelo sistema."); }
-        input.value = "";
-    };
-    reader.readAsText(input.files[0]);
-}
-
-/*incio ABA ENTRADA/DAIDA -- parte que está export PDF/EXCEL quando abre o MODAL "historico" */
-// Função Auxiliar para calcular permanência
-function calcularPermanencia(entrada, saida) {
-    if (!entrada || !saida) return "---";
-    
-    const diff = new Date(saida) - new Date(entrada);
-    
-    // Calcula horas, minutos e segundos totais
-    const horas = Math.floor(diff / (1000 * 60 * 60));
-    const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const segundos = Math.floor((diff % (1000 * 60)) / 1000); // Nova linha para segundos
-
-    // Formata para garantir sempre 2 dígitos  HH:mm:ss
-    const hFormatada = String(horas).padStart(2, '0');
-    const mFormatada = String(minutos).padStart(2, '0');
-    const sFormatada = String(segundos).padStart(2, '0');
-
-    return `${hFormatada}:${mFormatada}:${sFormatada}`;
-}
-
-// --- EXPORTAR HISTÓRICO PARA EXCEL ---
 function exportarHistoricoExcel() {
     const dados = JSON.parse(localStorage.getItem('registros') || '[]');
     if (dados.length === 0) return alert("Não há registros para exportar.");
 
     const dadosFormatados = dados.map(reg => ({
+        'Data': reg.data || new Date(reg.entrada).toLocaleDateString(),
         'Motorista': reg.motorista,
         'Vínculo': reg.vinculo || '---',
         'Tipo': reg.tipo,
         'Placa': reg.placa,
-        'Marca/Modelo': `${reg.marca} ${reg.modelo}`,
-        'Cor': reg.cor,
+        'Veículo': `${reg.marca} ${reg.modelo}`,
         'Entrada': reg.entrada ? new Date(reg.entrada).toLocaleString() : '---',
         'Saída': reg.saida ? new Date(reg.saida).toLocaleString() : 'Ainda no Pátio',
         'Permanência': calcularPermanencia(reg.entrada, reg.saida)
@@ -322,98 +509,71 @@ function exportarHistoricoExcel() {
     const ws = XLSX.utils.json_to_sheet(dadosFormatados);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Movimentação");
-    XLSX.writeFile(wb, `Historico_Movimentacao_SEES.xlsx`);
+    XLSX.writeFile(wb, `Historico_SEES.xlsx`);
 }
 
-// INICIO - ABA ENTRADA/SAÍDA--- EXPORTAR HISTÓRICO PARA PDF ---
 function exportarHistoricoPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber todas as colunas
+    const doc = new jsPDF('l', 'mm', 'a4');
     const dados = JSON.parse(localStorage.getItem('registros') || '[]');
 
-    doc.setFontSize(16);
-    doc.text("Relatório Geral de Movimentação (Entradas e Saídas)", 14, 15);
+    doc.text("Relatório Geral de Movimentação - SEES", 14, 15);
 
     const rows = dados.map(reg => [
+        reg.data || new Date(reg.entrada).toLocaleDateString(),
         reg.motorista,
         reg.vinculo || '---',
         reg.placa,
         `${reg.marca} ${reg.modelo}`,
-        reg.entrada ? new Date(reg.entrada).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) : '---',
-        reg.saida ? new Date(reg.saida).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) : 'Pátio',
+        reg.entrada ? new Date(reg.entrada).toLocaleTimeString() : '---',
+        reg.saida ? new Date(reg.saida).toLocaleTimeString() : 'Pátio',
         calcularPermanencia(reg.entrada, reg.saida)
     ]);
 
     doc.autoTable({
         startY: 25,
-        head: [['Motorista', 'Vínculo', 'Placa', 'Marca/Modelo', 'Entrada', 'Saída', 'Permanência']],
+        head: [['Data', 'Motorista', 'Vínculo', 'Placa', 'Veículo', 'Entrada', 'Saída', 'Permanência']],
         body: rows,
-        theme: 'striped',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [40, 40, 40] }
+        styles: { fontSize: 8 }
     });
 
-    doc.save("Relatorio_Movimentacao_SEES.pdf");
+    doc.save("Relatorio_SEES.pdf");
 }
 
-// incio - ABA ENTRADA/SAÍDA----- EXPORTAR PÁTIO ATUAL (EXCEL) ---
 function exportarPatioExcel() {
     const dados = JSON.parse(localStorage.getItem('registros') || '[]');
-    const noPatio = dados.filter(reg => !reg.saida); // Apenas quem não saiu
-
-    const dadosFormatados = noPatio.map(reg => ({
-        'Motorista': reg.motorista,
-        'Vínculo': reg.vinculo || '---',
-        'Tipo': reg.tipo,
-        'Placa': reg.placa,
-        'Veículo': `${reg.marca} ${reg.modelo} (${reg.cor})`,
-        'Hora Entrada': new Date(reg.entrada).toLocaleString()
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(dadosFormatados);
+    const noPatio = dados.filter(reg => !reg.saida);
+    const ws = XLSX.utils.json_to_sheet(noPatio);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Pátio Atual");
-    XLSX.writeFile(wb, `Veiculos_No_Patio_Agora.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Pátio");
+    XLSX.writeFile(wb, `Veiculos_No_Patio.xlsx`);
 }
-// FIM - ABA ENTRADA/SAÍDA----- EXPORTAR PÁTIO ATUAL (EXCEL) ---
-/*fim ABA ENTRADA/DAIDA -- parte que está export PDF/EXCEL quando abre o MODAL "historico" */
 
-/*FIM ABA DADOS REF. ENTRADA/SAÍDA DE VEÍCULOS POR MOTORISTA*/
+// --- ABA CADASTRO ---
 
-
-
-/*inicio ABA CADASTRO para registro de motorista e veículos*/
-/**permanencia formata horário para HORA:MINUTOS:SEGUNDOS */
 function atualizarTabelaRegistros() {
     const r = JSON.parse(localStorage.getItem('registros') || '[]');
-    const corpo = document.getElementById('tabelaRegistros');
-    if(!corpo) return;
+    const hoje = new Date().toLocaleDateString();
+    // Filtra para mostrar quem está no pátio OU quem saiu hoje
+    const filtrados = r.filter(x => !x.saida || new Date(x.entrada).toLocaleDateString() === hoje);
 
-    corpo.innerHTML = r.map((x, i) => {
-        // AQUI ESTÁ O SEGREDO: Definir o tempo final para quem ainda não saiu
-        const fim = x.saida ? x.saida : new Date().toISOString();
-        
-        // Chamar sua função e guardar o resultado numa variável
-        const tempoPermanencia = calcularPermanencia(x.entrada, fim);
-
-        return `
-            <tr>
-                <td>${x.motorista}</td>
-                <td>${x.vinculo}</td>
-                <td>${x.tipo}</td>
-                <td><b>${x.placa}</b></td>
-                <td>${x.marca}</td>
-                <td>${x.modelo}</td>
-                <td>${x.cor}</td>
-                <td>${x.ano}</td>
-                <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
-                <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge bg-success">No Pátio</span>'}</td>
-                <td class="fw-bold font-monospace text-center">${tempoPermanencia}</td>
-                <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
-            </tr>`;
-    }).join('');
+    document.getElementById('tabelaRegistros').innerHTML = filtrados.map((x, i) => `
+        <tr>
+            <td>${new Date(x.entrada).toLocaleDateString()}</td>
+            <td>${x.motorista}</td>
+            <td>${x.vinculo}</td>
+            <td><span class="badge bg-light text-dark border">${x.tipo}</span></td>
+            <td><code class="fw-bold text-primary">${x.placa}</code></td>
+            <td>${x.marca}</td>
+            <td>${x.modelo}</td>
+            <td>${x.cor}</td>
+            <td>${x.ano}</td>
+            <td class="small">${new Date(x.entrada).toLocaleTimeString()}</td>
+            <td class="small">${x.saida ? new Date(x.saida).toLocaleTimeString() : '<span class="badge bg-success">No Pátio</span>'}</td>
+            <td>${calcularPermanencia(x.entrada, x.saida)}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="removerItem('registros', ${i})">🗑️</button></td>
+        </tr>`).join('');
 }
-
 
 function salvarCadastro() {
     const index = parseInt(document.getElementById('editIndex').value);
@@ -425,11 +585,15 @@ function salvarCadastro() {
         marca: document.getElementById('cMarca').value.trim(),
         modelo: document.getElementById('cModelo').value.trim(),
         cor: document.getElementById('cCor').value.trim(),
-        ano: document.getElementById('cAno').value.trim()
+        ano: document.getElementById('cAno').value.trim(),
+        dataCadastro: new Date().toISOString()
     };
+
     if (!d.motorista || !d.placa || !d.vinculo) return alert("Preencha Nome, Placa e Vínculo!");
+    
     let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
     if (index === -1) l.push(d); else l[index] = d;
+    
     localStorage.setItem('cadastroVeiculos', JSON.stringify(l));
     limparFormularioCadastro();
     atualizarTudo();
@@ -448,16 +612,15 @@ function editarCadastro(i) {
     document.getElementById('cCor').value = v.cor;
     document.getElementById('cAno').value = v.ano;
     document.getElementById('editIndex').value = i;
-    document.getElementById('tituloCadastro').innerText = "📝 Editando";
+    document.getElementById('tituloCadastro').innerText = "📝 Editando Registro";
     document.getElementById('btnSalvar').innerText = "🔄 Atualizar";
     document.getElementById('btnCancelar').classList.remove('d-none');
 }
 
 function limparFormularioCadastro() {
-    document.getElementById('cNome').value = ""; document.getElementById('cVinculo').value = "";
-    document.getElementById('cPlaca').value = ""; document.getElementById('cMarca').value = ""; 
-    document.getElementById('cModelo').value = ""; document.getElementById('cCor').value = ""; 
-    document.getElementById('cAno').value = ""; document.getElementById('editIndex').value = "-1";
+    const campos = ['cNome', 'cVinculo', 'cPlaca', 'cMarca', 'cModelo', 'cCor', 'cAno'];
+    campos.forEach(id => document.getElementById(id).value = "");
+    document.getElementById('editIndex').value = "-1";
     document.getElementById('tituloCadastro').innerText = "Registrar Novo Veículo";
     document.getElementById('btnSalvar').innerText = "💾 Salvar";
     document.getElementById('btnCancelar').classList.add('d-none');
@@ -468,15 +631,36 @@ function atualizarTabelaCadastro() {
     const totalCarros = l.filter(v => (v.tipo || '').toLowerCase() === 'carro').length;
     const totalMotos = l.filter(v => (v.tipo || '').toLowerCase() === 'moto').length;
     
-// Dentro da função atualizarTabelaCadastro
-const elVagas = document.getElementById('contadorCadastrosVagas');
-if (elVagas) {
-    elVagas.innerHTML = `Total Cadastrados: <span class="fs-5">🚗</span> ${totalCarros} | <span class="fs-5">🏍️</span> ${totalMotos}`;
-}
-        
+    const elVagas = document.getElementById('contadorCadastrosVagas');
+    if (elVagas) elVagas.innerHTML = `Total Cadastrados: 🚗 ${totalCarros} | 🏍️ ${totalMotos}`;
+
     document.getElementById('tabelaCadastro').innerHTML = l.map((v, i) => `
         <tr>
-            <td>${v.motorista}</td><td><strong class="text-muted">${v.vinculo}</strong></td>
+            <td>${v.dataCadastro ? new Date(v.dataCadastro).toLocaleDateString() : '---'}</td>
+            <td>${v.motorista}</td>
+            <td><strong class="text-muted">${v.vinculo}</strong></td>
+            <td>${v.tipo}</td>
+            <td><code class="fw-bold text-primary">${v.placa}</code></td>
+            <td>${v.marca}</td>
+            <td>${v.modelo}</td>
+            <td>${v.cor}</td>
+            <td>${v.ano}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
+            </td>
+        </tr>`).join('');
+}
+
+function filtrarTabelaCadastro() {
+    const termo = document.getElementById('buscaCadastro').value.toLowerCase();
+    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    const filtrados = l.filter(v => v.motorista.toLowerCase().includes(termo) || v.placa.toLowerCase().includes(termo));
+    
+    document.getElementById('tabelaCadastro').innerHTML = filtrados.map((v, i) => `
+        <tr>
+            <td>${v.dataCadastro ? new Date(v.dataCadastro).toLocaleDateString() : '---'}</td>
+            <td>${v.motorista}</td><td>${v.vinculo}</td>
             <td>${v.tipo}</td><td><b>${v.placa}</b></td>
             <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
             <td>
@@ -485,218 +669,110 @@ if (elVagas) {
             </td>
         </tr>`).join('');
 }
-/*inicio ABA CADASTRO para registro de motorista e veículos*/
 
-/*inicio filtro ABA CADASTRO -- BUSCAR MOTORISTA/PLACA*/
-function filtrarTabelaCadastro() {
-    const termo = document.getElementById('buscaCadastro').value.toLowerCase();
-    const l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
-    document.getElementById('tabelaCadastro').innerHTML = l.filter(v => v.motorista.toLowerCase().includes(termo) || v.placa.toLowerCase().includes(termo))
-        .map((v, i) => `
-            <tr>
-                <td>${v.motorista}</td><td>${v.vinculo}</td>
-                <td>${v.tipo}</td><td><b>${v.placa}</b></td>
-                <td>${v.marca}</td><td>${v.modelo}</td><td>${v.cor}</td><td>${v.ano}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="editarCadastro(${i})">✏️</button>
-                    <button class="btn btn-sm btn-danger" onclick="removerItem('cadastroVeiculos', ${i})">🗑️</button>
-                </td>
-            </tr>`).join('');
-}
+// --- RELATÓRIOS ---
 
-/*inicio função LIMPAR botão pesquisar motorista/placa*/
-function limparBusca() {
-    // 1. Localiza o campo de input
-    const input = document.getElementById('buscaCadastro');
-    
-    // 2. Limpa o texto dentro dele
-    input.value = "";
-    
-    // 3. Chama a função de filtrar (como o campo está vazio, ela mostrará todos os registros)
-    filtrarTabelaCadastro();
-    
-    // 4. Coloca o foco de digitação de volta no campo (opcional, mas profissional)
-    input.focus();
-}
-/*fim função LIMPAR botão pesquisar motorista/placa*/
-
-/*fim filtro ABA CADASTRO -- BUSCAR MOTORISTA/PLACA*/
-
-
-/*inicio ABA CADASTRO para RELATORIO dos registros de motorista e veículos*/
-/*inicio relatorio de quantidade de veiculos por motorista*/
-// Função para abrir o Modal de Total por Motorista
 function exibirTotalPorMotorista() {
     const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
     const corpoTabela = document.getElementById('corpoTotalMotorista');
-    
-    if (cadastros.length === 0) {
-        return alert("Nenhum veículo cadastrado.");
-    }
+    if (cadastros.length === 0) return alert("Nenhum veículo cadastrado.");
 
-    // Limpar tabela antes de preencher
     corpoTabela.innerHTML = "";
-
-    // 1. Agrupar os veículos por motorista
     const agrupado = {};
     cadastros.forEach(v => {
         const chave = v.motorista.toUpperCase();
-        if (!agrupado[chave]) {
-            agrupado[chave] = { 
-                vinculo: v.vinculo || 'Não informado', 
-                veiculos: [] 
-            };
-        }
-        // Adiciona a descrição limpa do veículo
-        // O jeito certo de "empurrar" o texto com as tags para a lista:
-        agrupado[chave].veiculos.push(`${v.tipo}: <strong>${v.modelo}</strong> (<strong>${v.placa}</strong>) - <strong>${v.cor}</strong>`);
+        if (!agrupado[chave]) agrupado[chave] = { vinculo: v.vinculo || '---', veiculos: [] };
+        agrupado[chave].veiculos.push(`${v.tipo}: <strong>${v.modelo}</strong> (<strong>${v.placa}</strong>)`);
     });
 
-    // 2. Transformar em lista e ordenar (quem tem mais veículos aparece primeiro)
-    const listaOrdenada = Object.entries(agrupado).sort((a, b) => {
-        return b[1].veiculos.length - a[1].veiculos.length;
-    });
-
-    // 3. Inserir as linhas na tabela do Modal
-    listaOrdenada.forEach(([nome, dados]) => {
+    Object.entries(agrupado).sort((a, b) => b[1].veiculos.length - a[1].veiculos.length)
+    .forEach(([nome, dados]) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>
-                <strong>${nome}</strong><br>
-                <small class="text-muted">${dados.vinculo}</small>
-            </td>
-            <td>
-                ${dados.veiculos.join('<br>')}
-            </td>
-            <td class="text-center fw-bold">
-                ${dados.veiculos.length}
-            </td>
-        `;
+        tr.innerHTML = `<td><strong>${nome}</strong><br><small>${dados.vinculo}</small></td>
+                        <td>${dados.veiculos.join('<br>')}</td>
+                        <td class="text-center fw-bold">${dados.veiculos.length}</td>`;
         corpoTabela.appendChild(tr);
     });
-
-    // 4. Mostrar o Modal
     document.getElementById('modalTotalMotorista').style.display = 'block';
 }
 
-// Função para fechar o Modal
 function fecharModalMotorista() {
     document.getElementById('modalTotalMotorista').style.display = 'none';
 }
 
-// Opcional: Fechar o modal se o usuário clicar fora da caixa branca
-window.onclick = function(event) {
-    const modalHist = document.getElementById('modalHistorico');
-    const modalMot = document.getElementById('modalTotalMotorista');
-    if (event.target == modalHist) modalHist.style.display = "none";
-    if (event.target == modalMot) modalMot.style.display = "none";
-}
-
-/*INICIO EXPORT "PDV/EXCEL"relatorio de quantidade de veiculos por motorista*/
-// Função auxiliar para preparar os dados (evita repetição de código)
-function prepararDadosRelatorio() {
-    const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
-    const agrupado = {};
-    
-    cadastros.forEach(v => {
-        const chave = v.motorista.toUpperCase();
-        if (!agrupado[chave]) {
-            agrupado[chave] = { vinculo: v.vinculo || 'Não informado', veiculos: [] };
-        }
-        agrupado[chave].veiculos.push(`${v.tipo}: ${v.marca}, ${v.modelo} (${v.placa}) - ${v.cor}`);
-    });
-
-    return Object.entries(agrupado).sort((a, b) => b[1].veiculos.length - a[1].veiculos.length);
-}
-
-//ABA  CADASTRO  ---MODAL  EXPORTAR EXCEL ---
 function baixarRelatorioMotoristaExcel() {
-    const lista = prepararDadosRelatorio();
-    const dadosExcel = lista.map(([nome, dados]) => ({
-        'Motorista': nome,
-        'Vínculo': dados.vinculo,
-        'Veículos': dados.veiculos.join(' | '),
-        'Total': dados.veiculos.length
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(dadosExcel);
+    const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    const ws = XLSX.utils.json_to_sheet(cadastros);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-    XLSX.writeFile(wb, `Relatorio_Veiculos_por_Motorista.xlsx`);
+    XLSX.writeFile(wb, `Relatorio_Motoristas_SEES.xlsx`);
 }
 
-// ABA  CADASTRO  ---MODAL EXPORTAR PDF ---
 function baixarRelatorioMotoristaPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const lista = prepararDadosRelatorio();
-
-    //MODAL Título do PDF 
-    doc.setFontSize(18);
-    doc.text("Relatório: Veículos por Motorista", 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Gerado em: ${new Date().toLocaleString()}`, 14, 28);
-
-    // Formatar dados para a tabela do PDF
-    const rows = lista.map(([nome, dados]) => [
-        `${nome}\n(${dados.vinculo})`,
-        dados.veiculos.join('\n'),
-        dados.veiculos.length
-    ]);
-
-    doc.autoTable({
-        startY: 35,
-        head: [['Nome do Motorista', 'Veículos Cadastrados', 'Total']],
-        body: rows,
-        theme: 'grid',
-        headStyles: { fillColor: [0, 123, 255] }, // Azul do sistema
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-            2: { halign: 'center', fontStyle: 'bold' }
-        }
-    });
-
-    doc.save(`Relatorio_Motoristas_SEES.pdf`);
+    const cadastros = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
+    const rows = cadastros.map(v => [v.motorista, v.vinculo, v.placa, v.tipo, v.modelo]);
+    doc.autoTable({ head: [['Motorista', 'Vínculo', 'Placa', 'Tipo', 'Modelo']], body: rows });
+    doc.save(`Relatorio_Motoristas.pdf`);
 }
-/*fim relatorio de quantidade de veiculos por motorista*/
 
-// ABA - CADASTRO -- 
-function importarCadastros(input) {
-    if (!input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const json = JSON.parse(e.target.result);
-            if (!Array.isArray(json)) throw new Error("Formato inválido");
-            localStorage.setItem('cadastroVeiculos', JSON.stringify(json));
-            atualizarTudo();
-            enviarParaGoogle('cadastroVeiculos');
-            alert("✅ Importado e sincronizado!");
-        } catch (err) { alert("❌ Arquivo inválido! Use um JSON gerado pelo sistema."); }
-        input.value = "";
-    };
-    reader.readAsText(input.files[0]);
+window.onclick = function(event) {
+    const m1 = document.getElementById('modalHistorico');
+    const m2 = document.getElementById('modalTotalMotorista');
+    if (event.target == m1) m1.style.display = "none";
+    if (event.target == m2) m2.style.display = "none";
 }
 
 
-//CARREGAR DADOS DA PLANILHA PAR O navegador usando "GET" por padrão
+function validarPelaPlanilha(emailDigitado, senhaDigitada) {
+    // Puxa a lista de usuários que veio da planilha (ex: aba 'usuarios')
+    const usuariosPermitidos = JSON.parse(localStorage.getItem('usuarios_nuvem') || '[]');
+
+    const usuarioEncontrado = usuariosPermitidos.find(u => u.email === emailDigitado && u.senha === senhaDigitada);
+
+    if (usuarioEncontrado) {
+        realizarLogin(emailDigitado);
+    } else {
+        alert("Acesso negado: Usuário não consta na base de dados da Planilha.");
+    }
+}
+
+
+
 async function carregarDadosDaNuvem() {
-    console.log("Buscando dados na nuvem...");
     try {
         const response = await fetch(GOOGLE_API_URL);
         const nuvem = await response.json();
-
-        // Verificação de segurança: só salva se houver dados na resposta
-        if (nuvem.cadastroVeiculos && nuvem.cadastroVeiculos.length > 0) {
-            localStorage.setItem('cadastroVeiculos', JSON.stringify(nuvem.cadastroVeiculos));
-        }
-        if (nuvem.registros && nuvem.registros.length > 0) {
-            localStorage.setItem('registros', JSON.stringify(nuvem.registros));
+        
+        // Salva a aba de usuários (para validar login)
+        if (nuvem.usuarios) {
+            localStorage.setItem('usuarios', JSON.stringify(nuvem.usuarios));
         }
         
-        atualizarTudo();
-        console.log("Sincronização concluída!");
+        // Salva a aba de histórico (para a aba de auditoria)
+        if (nuvem.loginperfil) {
+            localStorage.setItem('loginperfil', JSON.stringify(nuvem.loginperfil));
+        }
+
+        // Dados de veículos e registros
+        if (nuvem.cadastroVeiculos) localStorage.setItem('cadastroVeiculos', JSON.stringify(nuvem.cadastroVeiculos));
+        if (nuvem.registros) localStorage.setItem('registros', JSON.stringify(nuvem.registros));
+
+        console.log("✅ Dados da nuvem carregados com sucesso!");
+        return true; 
     } catch (err) {
-        console.error("Erro ao baixar dados da nuvem (provavelmente vazia ou sem acesso GET):", err);
+        console.error("❌ Erro ao buscar dados da nuvem:", err);
+        return false;
     }
 }
+/*async function carregarDadosDaNuvem() {
+    try {
+        const response = await fetch(GOOGLE_API_URL);
+        const nuvem = await response.json();
+        if (nuvem.cadastroVeiculos) localStorage.setItem('cadastroVeiculos', JSON.stringify(nuvem.cadastroVeiculos));
+        if (nuvem.registros) localStorage.setItem('registros', JSON.stringify(nuvem.registros));
+        if (nuvem.loginperfil) localStorage.setItem('loginperfil', JSON.stringify(nuvem.loginperfil)); // Sincroniza logsatualizarTudo();
+        atualizarTudo();
+    } catch (err) { console.error("Erro ao baixar dados:", err); }
+}*/
