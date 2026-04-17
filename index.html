@@ -45,6 +45,25 @@
 
         /* --- RESPONSIVIDADE HIERÁRQUICA --- */
 
+        /* Força os containers dos gráficos a respeitarem o lado a lado */
+.chart-box {
+    display: flex !important;
+    flex-direction: row !important; /* Força horizontal sempre */
+    flex-wrap: nowrap !important; /* Proíbe quebra de linha */
+    align-items: flex-end;
+}
+
+.chart-container {
+    display: block;
+    position: relative;
+    width: 100%; /* Deixa o flex do pai controlar */
+}
+
+/* Ajuste específico para o canvas do Chart.js não bugar o layout */
+canvas {
+    width: 100% !important;
+    height: auto !important;
+}
         /* Container que expande com a tela, mas mantém margens elegantes */
 .main-wrapper {
     width: 100%;
@@ -170,7 +189,48 @@
         font-size: 1.8rem !important;
     }
 }
-        
+
+        /* Container mestre para telas grandes */
+.main-wrapper {
+    width: 100%;
+    max-width: 1600px; /* Evita que o conteúdo se espalhe demais em 22" */
+    margin: 0 auto;
+}
+
+/* Navbar Ultra-Responsiva */
+.navbar .container-fluid {
+    display: flex;
+    justify-content: space-between; /* Mantém logo na esquerda e usuário na direita */
+    align-items: center;
+    max-width: 1600px;
+    padding: 0 15px;
+}
+
+/* Ajuste do Header (Logo, Data, Vagas) */
+.header-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between; /* Distribui os blocos igualmente */
+    gap: 20px;
+}
+
+/* Responsividade para Monitores de 19-22 polegadas */
+@media screen and (min-width: 1400px) {
+    #dataHora {
+        font-size: 2rem !important; /* Data maior para leitura fácil */
+    }
+    .logo-sistema {
+        width: 320px; /* Logo cresce um pouco */
+    }
+    .navbar-brand {
+        font-size: 1.4rem;
+    }
+    #txtUserPerfil {
+        font-size: 1rem;
+        padding: 5px 15px !important;
+    }
+}
     </style>
 </head>
 
@@ -267,18 +327,21 @@
                     </div>
                 </div>
 
-                <div class="d-flex gap-3 text-center chart-box">
-                    <div class="chart-container">
-                        <h6 class="fw-bold mb-1" style="font-size: 10px;">CARROS</h6>
-                        <canvas id="graficoCarros"></canvas>
-                        <div id="statusCarros" class="fw-bold" style="font-size: 9px;"></div>
-                    </div>
-                    <div class="chart-container">
-                        <h6 class="fw-bold mb-1" style="font-size: 10px;">MOTOS</h6>
-                        <canvas id="graficoMotos"></canvas>
-                        <div id="statusMotos" class="fw-bold" style="font-size: 9px;"></div>
-                    </div>
-                </div>
+              <div class="d-flex flex-nowrap gap-2 gap-md-3 text-center chart-box justify-content-center">
+    
+        <div class="chart-container" style="flex: 1; min-width: 80px; max-width: 120px;">
+                <h6 class="fw-bold mb-1" style="font-size: 10px;">CARROS</h6>
+                <canvas id="graficoCarros"></canvas>
+        <div id="statusCarros" class="fw-bold" style="font-size: 9px;"></div>
+        </div>
+
+        <div class="chart-container" style="flex: 1; min-width: 80px; max-width: 120px;">
+        <h6 class="fw-bold mb-1" style="font-size: 10px;">MOTOS</h6>
+        <canvas id="graficoMotos"></canvas>
+        <div id="statusMotos" class="fw-bold" style="font-size: 9px;"></div>
+        </div>
+
+</div>
 
             </div>
         </div>
