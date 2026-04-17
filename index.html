@@ -6,18 +6,19 @@
     <title>🚗 SEES - Sistema de Estacionamento Escolar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
-    <style>
-             :root { --primary: #ffc107; --dark: #1a1a2e; }
-        body { margin: 0; background-color: #ffffff; font-family: 'Segoe UI', sans-serif; width: 100%; min-height: 100vh; }
 
-        /* ESTILO LOGIN */
+    <style>
+        :root { --primary: #ffc107; --dark: #1a1a2e; }
+        
+        body { margin: 0; background-color: #ffffff; font-family: 'Segoe UI', sans-serif; width: 100%; min-height: 100vh; overflow-x: hidden; }
+
+        /* --- LOGIN --- */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -26,128 +27,147 @@
         .login-card { background: white; width: 90%; max-width: 400px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
         .login-header { background: var(--primary); padding: 30px; text-align: center; }
 
-        /* MODAIS */
+        /* --- SISTEMA E NAV --- */
+        #sistemaConteudo { display: none; } /* Controlado pelo JS de sessão */
+        
+        .navbar .container-fluid { display: flex; flex-wrap: nowrap; align-items: center; }
+        .navbar-brand { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* --- ELEMENTOS GERAIS --- */
         .modal-sees { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 2000; }
         .modal-sees-content { background: #fff; padding: 25px; margin: 2% auto; width: 95%; max-width: 850px; border-radius: 15px; border-top: 5px solid var(--primary); max-height: 90vh; overflow-y: auto; }
         
-        /* GRÁFICOS */
         .chart-container { width: 120px; text-align: center; }
         canvas { max-width: 100% !important; height: auto !important; }
-
-        /* AJUSTES DE RESPONSIVIDADE CUSTOMIZADOS */
         .logo-sistema { width: 280px; max-width: 100%; height: auto; transition: 0.3s; }
-        
-        /* Media Query para Celulares (Telas até 768px) */
-        @media (max-width: 768px) {
-            .navbar-brand { font-size: 0.9rem; white-space: normal; }
-            .logo-sistema { width: 180px; margin: 0 auto; display: block; }
-            .header-info { text-align: center; margin-bottom: 20px; }
-            
-            /* Faz os cards de gráficos e vagas ocuparem largura total */
-            .col-lg-5 { justify-content: center !important; margin-top: 15px; }
-            .chart-box { flex-direction: column; align-items: center; gap: 20px !important; }
-            
-            /* Ajuste das abas para scroll horizontal se necessário */
-            .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
-            .nav-tabs .nav-link { white-space: nowrap; padding: 10px 15px; }
-            
-            /* Ajuste dos inputs de cadastro no mobile */
-            .card-body .row .col-md-1, .card-body .row .col-md-2, .card-body .row .col-md-3 {
-                margin-bottom: 10px;
-            }
-            
-            /* Esconder elementos menos importantes no mobile para ganhar espaço */
-            .dica-f5 { display: none; }
+        .table-responsive { border: none !important; margin-bottom: 1rem; }
+
+        /* --- RESPONSIVIDADE HIERÁRQUICA --- */
+
+        /* Telas Gigantes (UltraWide) */
+        @media only screen and (min-width: 1550px) {
+            .container-fluid { max-width: 1500px; margin: 0 auto; }
+            .logo-sistema { width: 350px; }
         }
 
-        /* Ajustes para Tablets */
-        @media (min-width: 769px) and (max-width: 1024px) {
+        /* Notebooks e Desktops Padrão */
+        @media only screen and (min-width: 1400px) and (max-width: 1549px) {
+            .container-fluid { max-width: 1350px; margin: 0 auto; }
+        }
+
+        /* Ajuste para telas médias (evita desconfigurar a nav) */
+        @media screen and (min-width: 800px) {
+            .main-wrapper { margin: 1em 2em; }
+        }
+
+        /* Tablets e Telas Médias Pequenas */
+        @media only screen and (max-width: 959px) {
+            p { font-size: 10px; }
+            .navbar-brand b { font-size: 0.85rem; }
+        }
+
+        @media only screen and (min-width: 768px) and (max-width: 959px) {
+            p { font-size: 12px; }
             .logo-sistema { width: 220px; }
             .chart-container { width: 100px; }
         }
 
-        /* Estilo para tabelas em telas pequenas */
-        .table-responsive { border: none !important; margin-bottom: 1rem; }
+        /* Celulares Gerais */
+        @media only screen and (max-width: 767px) {
+            p { font-size: 14px; }
+            .navbar-brand { font-size: 0.8rem; white-space: normal; }
+            .logo-sistema { width: 180px; margin: 0 auto; display: block; }
+            .header-info { text-align: center; margin-bottom: 20px; }
+            .col-lg-5 { justify-content: center !important; margin-top: 15px; }
+            .chart-box { flex-direction: column; align-items: center; gap: 20px !important; }
+            .nav-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .dica-f5 { display: none; }
+        }
 
+        /* Celulares em modo Paisagem */
+        @media only screen and (min-width: 480px) and (max-width: 767px) {
+            p { font-size: 9px; }
+        }
 
+        /* Celulares Pequenos (Portrait) */
+        @media only screen and (max-width: 479px) {
+            p { font-size: 7px; }
+            .navbar-brand b { font-size: 0.7rem; }
+            #txtUserPerfil { font-size: 10px; padding: 2px !important; }
+            .btn-sair { font-size: 10px; padding: 4px 8px; }
+        }
     </style>
 </head>
 
 <body class="container-fluid p-0">
 
-    <!-- inicio login  id="sistemaConteudo"   tem função para esconder o LOGIN se estiver com sessão ativa-->
     <div id="loginOverlay">
         <div class="login-card">
             <div class="login-header">
                 <h6 class="mb-3 opacity-90 text-center">Acesso Restrito</h6>
                 <i class="bi bi-shield-lock-fill fs-1"></i>
                 <h1 class="fw-bold mb-0 mt-2">SEES</h1>
-        <span class="navbar-brand fw-bold text-warning">
-                <b class="text-white"> Sistema de Estacionamento Escolar </b>b
-        </span>       
-        <br> <b style="font-size: 40px; vertical-align: middle;"> 🚗 | 🏍️ </b>         
-            </b> <br> 
-    </div>
+                <span class="navbar-brand fw-bold text-warning">
+                    <b class="text-white"> Sistema de Estacionamento Escolar </b>
+                </span>
+                <br> <b style="font-size: 40px; vertical-align: middle;"> 🚗 | 🏍️ </b>
+            </div>
             <form id="formLogin" class="p-4">
                 <div class="alert alert-info py-2 small fw-bold text-center"> Preencha os campos abaixo</div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">E-MAIL</label>
-                    <input type="email" id="loginEmail" class="form-control" placeholder="admin@gmail.com"  required>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="admin@gmail.com" required>
                 </div>
                 <div class="mb-4">
                     <label class="form-label small fw-bold">SENHA</label>
-                    <input type="password" id="loginSenha" class="form-control"  placeholder="admin1245@" required>
+                    <input type="password" id="loginSenha" class="form-control" placeholder="admin1245@" required>
                 </div>
                 <button type="submit" class="btn btn-warning w-100 fw-bold shadow">Acessar</button>
             </form>
         </div>
     </div>
-    <!-- FIM login -->
 
     <div id="sistemaConteudo">
         <nav class="navbar navbar-dark bg-dark p-2 sticky-top border-bottom border-warning border-5">
-            <div class="container-fluid d-flex justify-content-between">
-                <span class="navbar-brand fw-bold text-warning">
-                 <i class="bi bi-p-square-fill me-4 gap-1"></i>SEES <b class="text-white"> - Sistema de Estacionamento Escolar  🚗|🏍️ </b>
+            <div class="container-fluid">
+                <span class="navbar-brand fw-bold text-warning d-flex align-items-center">
+                    <i class="bi bi-p-square-fill me-2"></i>
+                    <span>SEES <b class="text-white d-none d-md-inline"> - Sistema Escolar 🚗|🏍️</b></span>
                 </span>
-                
-                <div class="d-flex align-items-center gap-2">
-                    <span class="navbar-brand fw-bold text-warning">
-                   Seja Bem-Vindo 
-                </span>
-                <span id="txtUserPerfil" class="me-3 small text-white border border-secondary p-1 rounded bg-black"></span>
-                    <button onclick="encerrarSessao()" class="btn-sair btn btn-sm btn-outline-danger rounded-pill fw-bold">Sair do Sistema</button>
+
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <span class="text-warning fw-bold d-none d-lg-inline small me-2">Seja Bem-Vindo</span>
+                    <span id="txtUserPerfil" class="small text-white border border-secondary p-1 rounded bg-black"></span>
+                    <button onclick="encerrarSessao()" class="btn btn-sm btn-outline-danger rounded-pill fw-bold btn-sair">Sair</button>
                 </div>
             </div>
         </nav>
 
-     <div class="container-fluid mt-3">
+        <div class="container-fluid mt-3 main-wrapper">
             <div class="row align-items-center mb-3">
                 <div class="col-lg-7 header-info">
                     <div class="d-md-flex align-items-center gap-3">
                         <img src="sistema_estacionamento_escolar_seguro.png" class="logo-sistema" alt="Logo" onerror="this.src='https://via.placeholder.com/300x100?text=SEES'">
                         <div class="mt-2 mt-md-0">
                             <h6 class="text-muted mb-0 small">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
-                <br><div id="dataHora" class="fw-bold fs-5 text-dark"></div>
-                <br><p class="small dica-f5">Dica: Use <strong>"Ctrl + F5"</strong> para atualizar os dados da nuvem se necessário.</p><hr>
+                            <div id="dataHora" class="fw-bold fs-5 text-dark mt-1"></div>
+                            <p class="small dica-f5 mb-0">Dica: Use <strong>"Ctrl + F5"</strong> para atualizar dados da nuvem.</p>
+                        </div>
                     </div>
                 </div>
-               </div>
-         </div>
 
-         <div class="col-lg-5 d-flex justify-content-end align-items-center gap-3">
-            <div class="card card-body shadow-sm p-2" style="max-width: 350px;">
-                <div class="row g-2 align-items-center">
-                    <div class="col-4"><h6 class="mb-0 small fw-bold">⚙️ Vagas</h6></div>
-                    <div class="col-3"> 🚗 <input id="vCarro" type="number" class="form-control form-control-sm" placeholder="Carro"></div>
-                    <div class="col-3"> 🏍️ <input id="vMoto" type="number" class="form-control form-control-sm" placeholder="Moto"></div>
-                    <div class="col-2"><button class="btn btn-primary btn-sm" onclick="salvarVagas()">💾 Salvar </button></div>
-                    
-                </div>
-                 <p class="mb-2 mt-1 small text-muted"> 🚗|🏍️ Inserir/Editar as vagas de estacionamento.</p>
-            </div>
+                <div class="col-lg-5 d-flex justify-content-end align-items-center flex-wrap gap-3">
+                    <div class="card card-body shadow-sm p-2" style="max-width: 100%; width: 350px;">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-4"><h6 class="mb-0 small fw-bold">⚙️ Vagas</h6></div>
+                            <div class="col-3">🚗<input id="vCarro" type="number" class="form-control form-control-sm" placeholder="Carro"></div>
+                            <div class="col-3">🏍️<input id="vMoto" type="number" class="form-control form-control-sm" placeholder="Moto"></div>
+                            <div class="col-2"><button class="btn btn-primary btn-sm w-100" onclick="salvarVagas()">💾</button></div>
+                        </div>
+                        <p class="mb-0 mt-1 small text-muted text-center" style="font-size: 10px;">Gerenciar vagas disponíveis.</p>
+                    </div>
 
-           <div class="d-flex gap-3 text-center chart-box">
+                    <div class="d-flex gap-3 text-center chart-box">
                         <div class="chart-container">
                             <h6 class="fw-bold small mb-1">CARROS</h6>
                             <canvas id="graficoCarros"></canvas>
@@ -158,10 +178,12 @@
                             <canvas id="graficoMotos"></canvas>
                             <div id="statusMotos" style="font-size: 10px;"></div>
                         </div>
+                    </div>
+                </div>
             </div>
+            <hr class="d-lg-none">
         </div>
     </div>
-            
 
             <!--INICIO ABAS -->
              <ul class="nav nav-tabs" id="myTab">
