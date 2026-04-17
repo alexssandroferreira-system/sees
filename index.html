@@ -148,46 +148,67 @@
             </div>
         </nav>
 
-     <div class="container-fluid mt-3">
-            <div class="row align-items-center mb-3">
-                <div class="col-lg-7 header-info">
-                    <div class="d-md-flex align-items-center gap-3">
-                        <img src="sistema_estacionamento_escolar_seguro.png" class="logo-sistema" alt="Logo" onerror="this.src='https://via.placeholder.com/300x100?text=SEES'">
-                        <div class="mt-2 mt-md-0">
-                          <br><div id="dataHora" class="fw-bold fs-5 text-dark"></div>
-                            <h6 class="text-muted mb-0 small">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
-                        <br><p class="small dica-f5">Dica: Use <strong>"Ctrl + F5"</strong> para atualizar os dados.</p><hr>
-                 </div>
+        
+  <div class="container-fluid mt-3">
+    <div class="row align-items-center mb-3 g-3">
+        
+        <div class="col-lg-7">
+            <div class="d-md-flex align-items-center gap-3 text-center text-md-start">
+                <img src="sistema_estacionamento_escolar_seguro.png" class="logo-sistema mb-2 mb-md-0" alt="Logo" onerror="this.src='https://via.placeholder.com/300x100?text=SEES'">
+                <div class="flex-grow-1">
+                    <div id="dataHora" class="fw-bold fs-5 text-dark"></div>
+                    <h6 class="text-muted mb-0 small">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
+                    <p class="small dica-f5 mb-0 d-none d-md-block">
+                        Dica: Use <strong>"Ctrl + F5"</strong> para atualizar os dados.
+                    </p>
                 </div>
-               </div>
-         </div>
-
-         <div class="col-lg-5 d-flex justify-content-end align-items-center gap-3">
-            <div class="card card-body shadow-sm p-2" style="max-width: 350px;">
-                <div class="row g-2 align-items-center">
-                    <div class="col-4"><h6 class="mb-0 small fw-bold">⚙️ Vagas</h6></div>
-                    <div class="col-3"> 🚗 <input id="vCarro" type="number" class="form-control form-control-sm" placeholder="Carro"></div>
-                    <div class="col-3"> 🏍️ <input id="vMoto" type="number" class="form-control form-control-sm" placeholder="Moto"></div>
-                    <div class="col-2"><button class="btn btn-primary btn-sm" onclick="salvarVagas()">💾</button></div>
-                    
-                </div>
-                 <p class="mb-2 mt-1 small text-muted"> 🚗|🏍️ Inserir/Editar as vagas.</p>
             </div>
+            <hr class="d-md-none"> </div>
 
-           <div class="d-flex gap-3 text-center chart-box">
-                        <div class="chart-container">
-                            <h6 class="fw-bold small mb-1">CARROS</h6>
-                            <canvas id="graficoCarros"></canvas>
-                            <div id="statusCarros" style="font-size: 10px;"></div>
+        <div class="col-lg-5">
+            <div class="d-flex flex-column flex-sm-row justify-content-lg-end align-items-center gap-3">
+                
+                <div class="card card-body shadow-sm p-2" style="max-width: 320px; width: 100%;">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 text-center mb-1">
+                            <h6 class="mb-0 small fw-bold text-uppercase">⚙️ Configurar Vagas</h6>
                         </div>
-                        <div class="chart-container">
-                            <h6 class="fw-bold small mb-1">MOTOS</h6>
-                            <canvas id="graficoMotos"></canvas>
-                            <div id="statusMotos" style="font-size: 10px;"></div>
+                        <div class="col-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text p-1">🚗</span>
+                                <input id="vCarro" type="number" class="form-control" placeholder="Carro">
+                            </div>
                         </div>
+                        <div class="col-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text p-1">🏍️</span>
+                                <input id="vMoto" type="number" class="form-control" placeholder="Moto">
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="salvarVagas()">💾</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 text-center chart-box">
+                    <div class="chart-container">
+                        <h6 class="fw-bold mb-1" style="font-size: 10px;">CARROS</h6>
+                        <canvas id="graficoCarros"></canvas>
+                        <div id="statusCarros" class="fw-bold" style="font-size: 9px;"></div>
+                    </div>
+                    <div class="chart-container">
+                        <h6 class="fw-bold mb-1" style="font-size: 10px;">MOTOS</h6>
+                        <canvas id="graficoMotos"></canvas>
+                        <div id="statusMotos" class="fw-bold" style="font-size: 9px;"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </div>
+        
+    </div> <hr class="d-none d-md-block opacity-25">
+</div>
             
 
             <!--INICIO ABAS -->
