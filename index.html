@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -6,15 +7,15 @@
     <title>🚗 SEES - Sistema de Estacionamento Escolar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
+    
     <style>
-        :root { --primary: #ffc107; --dark: #1a1a2e; }
+            :root { --primary: #ffc107; --dark: #1a1a2e; }
         
         body { margin: 0; background-color: #ffffff; font-family: 'Segoe UI', sans-serif; width: 100%; min-height: 100vh; overflow-x: hidden; }
 
@@ -101,73 +102,79 @@
 
 <body class="container-fluid p-0">
 
+    <!-- inicio login  id="sistemaConteudo"   tem função para esconder o LOGIN se estiver com sessão ativa-->
     <div id="loginOverlay">
         <div class="login-card">
             <div class="login-header">
                 <h6 class="mb-3 opacity-90 text-center">Acesso Restrito</h6>
                 <i class="bi bi-shield-lock-fill fs-1"></i>
                 <h1 class="fw-bold mb-0 mt-2">SEES</h1>
-                <span class="navbar-brand fw-bold text-warning">
-                    <b class="text-white"> Sistema de Estacionamento Escolar </b>
-                </span>
-                <br> <b style="font-size: 40px; vertical-align: middle;"> 🚗 | 🏍️ </b>
-            </div>
+        <span class="navbar-brand fw-bold text-warning">
+                <b class="text-white"> Sistema de Estacionamento Escolar </b>b
+        </span>       
+        <br> <b style="font-size: 40px; vertical-align: middle;"> 🚗 | 🏍️ </b>         
+            </b> <br> 
+    </div>
             <form id="formLogin" class="p-4">
                 <div class="alert alert-info py-2 small fw-bold text-center"> Preencha os campos abaixo</div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">E-MAIL</label>
-                    <input type="email" id="loginEmail" class="form-control" placeholder="admin@gmail.com" required>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="admin@gmail.com"  required>
                 </div>
                 <div class="mb-4">
                     <label class="form-label small fw-bold">SENHA</label>
-                    <input type="password" id="loginSenha" class="form-control" placeholder="admin1245@" required>
+                    <input type="password" id="loginSenha" class="form-control"  placeholder="admin1245@" required>
                 </div>
                 <button type="submit" class="btn btn-warning w-100 fw-bold shadow">Acessar</button>
             </form>
         </div>
     </div>
+    <!-- FIM login -->
 
     <div id="sistemaConteudo">
         <nav class="navbar navbar-dark bg-dark p-2 sticky-top border-bottom border-warning border-5">
-            <div class="container-fluid">
-                <span class="navbar-brand fw-bold text-warning d-flex align-items-center">
-                    <i class="bi bi-p-square-fill me-2"></i>
-                    <span>SEES <b class="text-white d-none d-md-inline"> - Sistema Escolar 🚗|🏍️</b></span>
+            <div class="container-fluid d-flex justify-content-between">
+                <span class="navbar-brand fw-bold text-warning">
+                 <i class="bi bi-p-square-fill me-4 gap-1"></i>SEES <b class="text-white"> - Sistema de Estacionamento Escolar  🚗|🏍️ </b>
                 </span>
-
-                <div class="d-flex align-items-center gap-2 ms-auto">
-                    <span class="text-warning fw-bold d-none d-lg-inline small me-2">Seja Bem-Vindo</span>
-                    <span id="txtUserPerfil" class="small text-white border border-secondary p-1 rounded bg-black"></span>
-                    <button onclick="encerrarSessao()" class="btn btn-sm btn-outline-danger rounded-pill fw-bold btn-sair">Sair</button>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <span class="navbar-brand fw-bold text-warning">
+                   Seja Bem-Vindo 
+                </span>
+                <span id="txtUserPerfil" class="me-3 small text-white border border-secondary p-1 rounded bg-black"></span>
+                    <button onclick="encerrarSessao()" class="btn-sair btn btn-sm btn-outline-danger rounded-pill fw-bold">Sair do Sistema</button>
                 </div>
             </div>
         </nav>
 
-        <div class="container-fluid mt-3 main-wrapper">
+     <div class="container-fluid mt-3">
             <div class="row align-items-center mb-3">
                 <div class="col-lg-7 header-info">
                     <div class="d-md-flex align-items-center gap-3">
                         <img src="sistema_estacionamento_escolar_seguro.png" class="logo-sistema" alt="Logo" onerror="this.src='https://via.placeholder.com/300x100?text=SEES'">
                         <div class="mt-2 mt-md-0">
                             <h6 class="text-muted mb-0 small">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
-                            <div id="dataHora" class="fw-bold fs-5 text-dark mt-1"></div>
-                            <p class="small dica-f5 mb-0">Dica: Use <strong>"Ctrl + F5"</strong> para atualizar dados da nuvem.</p>
-                        </div>
+                <br><div id="dataHora" class="fw-bold fs-5 text-dark"></div>
+                <br><p class="small dica-f5">Dica: Use <strong>"Ctrl + F5"</strong> para atualizar os dados da nuvem se necessário.</p><hr>
                     </div>
                 </div>
+               </div>
+         </div>
 
-                <div class="col-lg-5 d-flex justify-content-end align-items-center flex-wrap gap-3">
-                    <div class="card card-body shadow-sm p-2" style="max-width: 100%; width: 350px;">
-                        <div class="row g-2 align-items-center">
-                            <div class="col-4"><h6 class="mb-0 small fw-bold">⚙️ Vagas</h6></div>
-                            <div class="col-3">🚗<input id="vCarro" type="number" class="form-control form-control-sm" placeholder="Carro"></div>
-                            <div class="col-3">🏍️<input id="vMoto" type="number" class="form-control form-control-sm" placeholder="Moto"></div>
-                            <div class="col-2"><button class="btn btn-primary btn-sm w-100" onclick="salvarVagas()">💾</button></div>
-                        </div>
-                        <p class="mb-0 mt-1 small text-muted text-center" style="font-size: 10px;">Gerenciar vagas disponíveis.</p>
-                    </div>
+         <div class="col-lg-5 d-flex justify-content-end align-items-center gap-3">
+            <div class="card card-body shadow-sm p-2" style="max-width: 350px;">
+                <div class="row g-2 align-items-center">
+                    <div class="col-4"><h6 class="mb-0 small fw-bold">⚙️ Vagas</h6></div>
+                    <div class="col-3"> 🚗 <input id="vCarro" type="number" class="form-control form-control-sm" placeholder="Carro"></div>
+                    <div class="col-3"> 🏍️ <input id="vMoto" type="number" class="form-control form-control-sm" placeholder="Moto"></div>
+                    <div class="col-2"><button class="btn btn-primary btn-sm" onclick="salvarVagas()">💾 Salvar </button></div>
+                    
+                </div>
+                 <p class="mb-2 mt-1 small text-muted"> 🚗|🏍️ Inserir/Editar as vagas de estacionamento.</p>
+            </div>
 
-                    <div class="d-flex gap-3 text-center chart-box">
+           <div class="d-flex gap-3 text-center chart-box">
                         <div class="chart-container">
                             <h6 class="fw-bold small mb-1">CARROS</h6>
                             <canvas id="graficoCarros"></canvas>
@@ -178,12 +185,10 @@
                             <canvas id="graficoMotos"></canvas>
                             <div id="statusMotos" style="font-size: 10px;"></div>
                         </div>
-                    </div>
-                </div>
             </div>
-            <hr class="d-lg-none">
         </div>
     </div>
+            
 
             <!--INICIO ABAS -->
              <ul class="nav nav-tabs" id="myTab">
