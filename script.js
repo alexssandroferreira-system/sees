@@ -452,6 +452,23 @@ function registrarSaida() {
     enviarParaGoogle('registros');
 }
 
+function abrirModalEntrada() {
+    const modal = document.getElementById('modalAcesso');
+    if (modal) {
+        modal.style.display = 'block';
+        // Limpa a busca ao abrir
+        document.getElementById('buscaEntrada').value = '';
+        filtrarMotoristasEntrada(); 
+    }
+}
+
+function fecharModalEntrada() {
+    const modal = document.getElementById('modalAcesso');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
 function removerItem(key, i) {
     if (confirm('Deseja realmente excluir este registro?')) {
         let l = JSON.parse(localStorage.getItem(key) || '[]');
