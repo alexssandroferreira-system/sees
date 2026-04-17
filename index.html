@@ -45,6 +45,45 @@
 
         /* --- RESPONSIVIDADE HIERÁRQUICA --- */
 
+        /* Container que expande com a tela, mas mantém margens elegantes */
+.main-wrapper {
+    width: 100%;
+    max-width: 1800px; /* Limite para não esticar ao infinito em TVs/Monitores gigantes */
+    margin: 0 auto;
+    padding: 15px;
+}
+
+/* Ajuste da Navbar para Monitores Grandes */
+.navbar .container-fluid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1800px;
+}
+
+/* Distribuição do Header (Logo | Info | Vagas | Gráficos) */
+@media screen and (min-width: 1200px) {
+    .header-info-container {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto; /* Logo, Info, Vagas, Gráficos */
+        gap: 30px;
+        align-items: center;
+    }
+}
+
+/* Ajuste para telas entre 1400px e 2000px */
+@media screen and (min-width: 1400px) {
+    body {
+        font-size: 16px; /* Aumenta levemente a fonte em telas grandes */
+    }
+    .logo-sistema {
+        width: 320px; /* Logo maior em telas maiores */
+    }
+    .card-body {
+        padding: 1.5rem !important;
+    }
+}
+        
         /* Telas Gigantes (UltraWide) */
         @media only screen and (min-width: 1550px) {
             .container-fluid { max-width: 1500px; margin: 0 auto; }
@@ -97,6 +136,41 @@
             #txtUserPerfil { font-size: 10px; padding: 2px !important; }
             .btn-sair { font-size: 10px; padding: 4px 8px; }
         }
+
+        /* Garante que o texto não quebre linha de forma feia e diminua a fonte se necessário */
+.texto-ajustavel {
+    white-space: nowrap; /* Mantém na mesma linha */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Se for muito pequeno, coloca "..." */
+    display: block !important; /* Garante visibilidade total */
+}
+
+/* Ajuste proporcional por tamanho de tela */
+@media (max-width: 576px) {
+    .texto-ajustavel {
+        font-size: 0.65rem; /* Fonte bem pequena para celulares */
+    }
+    #dataHora {
+        font-size: 1.1rem !important;
+    }
+}
+
+@media (min-width: 1200px) {
+    .texto-ajustavel {
+        font-size: 0.9rem; /* Fonte padrão para telas grandes */
+    }
+}
+
+/* Para telas gigantes (suas 19-22 polegadas) */
+@media (min-width: 1600px) {
+    .texto-ajustavel {
+        font-size: 1rem;
+    }
+    #dataHora {
+        font-size: 1.8rem !important;
+    }
+}
+        
     </style>
 </head>
 
@@ -155,13 +229,16 @@
         <div class="col-lg-7">
             <div class="d-md-flex align-items-center gap-3 text-center text-md-start">
                 <img src="sistema_estacionamento_escolar_seguro.png" class="logo-sistema mb-2 mb-md-0" alt="Logo" onerror="this.src='https://via.placeholder.com/300x100?text=SEES'">
+                <div class="d-flex flex-column flex-md-row align-items-center gap-3 text-center text-md-start">
+                <img src="sistema_estacionamento_escolar_seguro.png" class="logo-sistema mb-2 mb-md-0" alt="Logo" onerror="this.src='https://via.placeholder.com/300x100?text=SEES'">
                 <div class="flex-grow-1">
                     <div id="dataHora" class="fw-bold fs-5 text-dark"></div>
                     <h6 class="text-muted mb-0 small">Desenvolvido por: Alexssandro Ferreira da Silva @2026</h6>
-                    <p class="small dica-f5 mb-0 d-none d-md-block">
-                        Dica: Use <strong>"Ctrl + F5"</strong> para atualizar os dados.
-                    </p>
-                </div>
+                <p class="small dica-f5 mb-0 texto-ajustavel">
+                    Dica: Use <strong>"Ctrl + F5"</strong> para atualizar os dados.
+                </p>
+            </div>
+</div>
             </div>
             <hr class="d-md-none"> </div>
 
