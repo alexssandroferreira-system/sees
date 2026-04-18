@@ -398,7 +398,7 @@ function filtrarMotoristasEntrada() {
         .forEach(v => {
             let o = document.createElement('option');
             o.value = JSON.stringify(v); 
-            o.textContent = `${v.motorista} - ${v.vinculo} / ${v.tipo}(${v.placa}) - ${v.modelo}/ ${v.cor}`;
+            o.textContent = `${v.motorista} - ${v.vinculo} / ${v.tipo}(${v.placa}) - ${v.modelo} / ${v.cor}`;
             s.appendChild(o);
         });
 }
@@ -606,7 +606,7 @@ function salvarCadastro() {
         dataCadastro: new Date().toISOString()
     };
 
-    if (!d.motorista || !d.placa || !d.vinculo) return alert("Preencha Nome, Placa e Vínculo!");
+    if (!d.motorista || !d.placa || !d.vinculo) return alert("Preencha Nome, Placa, Vínculo e demais informações!");
     
     let l = JSON.parse(localStorage.getItem('cadastroVeiculos') || '[]');
     if (index === -1) l.push(d); else l[index] = d;
