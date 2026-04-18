@@ -398,7 +398,7 @@ function filtrarMotoristasEntrada() {
         .forEach(v => {
             let o = document.createElement('option');
             o.value = JSON.stringify(v); 
-            o.textContent = `${v.motorista} - ${v.vinculo} / ${v.tipo}(${v.placa}) - ${v.modelo}`;
+            o.textContent = `${v.motorista} - ${v.vinculo} / ${v.tipo}(${v.placa}) - ${v.modelo}/ ${v.cor}`;
             s.appendChild(o);
         });
 }
